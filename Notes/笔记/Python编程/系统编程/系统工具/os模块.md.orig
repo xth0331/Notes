@@ -87,34 +87,5 @@ os.pathsep, os.sep, os,pardir, os.curdir, os.linesep
 
 ## 常见os.path工具
 
-内嵌的`os.path`模块提供了一整套目录处理相关工具。举例来说，它提供的可移植函数可以用来检查文件类型（`isdir`,`isfile`等）、测试文件是否存在（`exists`)，以及通过文件名来获取文件的大小（`getsize`）:
-
-```python
-import os
-os.path.isdir(r'C:\Users'), os.path.isfile(r'C:\Users')
-(True, False)
-
-
-os.path.isdir(r'C:\config.sys'), os.path.isfile(r'C:\config.sys')
-(False, True) 
-
-os.path.isdir('nonesuch'), os.path.isfile('nonesuch')
-(False, False)
-
-os.path.exists(r'c\Users\Xie')
-False
-
-os.path.exists(r'c:\Users\Default')
-True
-
-os.path.getsize(r'C:\autoexec.bat')
-24
-```
-
-
-
-`os.path.isdir`和`os.path.isfile`调用可以告诉我们文件名是目录还是一个简单的文件。如果文件不存在，二者都会返回*False*
-
-
-
-`os.path.split(r'C:\temp\data.txt')`
+内嵌的`os.path`模块提供了一整套
+>>>>>>> 068703d338993344f862e184dfeab21a95f28258:笔记/Python编程/系统编程/系统工具/os模块.md
