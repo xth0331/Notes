@@ -70,4 +70,6 @@ os.pathsep, os.sep, os,pardir, os.curdir, os.linesep
 
 
 
-`os.sep`是Python底层运行平台所采用的目录组分隔符号。z
+`os.sep`是Python底层运行平台所采用的目录组分隔符号。他在windows下自动预设为“\” ，POSIX则是“/” ,某些Mac则是“:”。类似的，os.pathsep提供用于在目录列表中分隔目录的字符，POSIX使用“:”，DOS和Windows使用“；”。
+
+当我们在脚本
