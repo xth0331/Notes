@@ -116,5 +116,3 @@ os.path.getsize(r'C:\autoexec.bat')
 `os.path.isdir`和`os.path.isfile`调用可以告诉我们文件名是目录还是一个简单的文件。如果文件不存在，二者都会返回*False*
 
 
-
-`os.path.split(r'C:\temp\data.txt')`
