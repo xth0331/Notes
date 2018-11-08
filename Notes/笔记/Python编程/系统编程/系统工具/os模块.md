@@ -73,8 +73,8 @@ os.pathsep, os.sep, os,pardir, os.curdir, os.linesep
 <<<<<<< HEAD:Notes/笔记/Python编程/系统编程/系统工具/os模块.md
 `os.sep`是Python底层运行平台所采用的目录组分隔符号。他在windows下自动预设为“\” ，POSIX则是“/” ,某些Mac则是“:”。类似的，os.pathsep提供用于在目录列表中分隔目录的字符，POSIX使用“:”，DOS和Windows使用“；”。
 
-当我们在脚本
-=======
+
+
 `os.sep`是Python底层运行平台所采用的目录组分隔符号。他在windows下自动预设为
 
 "\\",POSIX计算机则是"/", 某些Mac上则使用”:“。类似地，`os.pathsep`提供用于在目录列表中分隔目录的字符，POSIX使用":",DOS和windows使用”;“。
@@ -113,6 +113,60 @@ os.path.getsize(r'C:\autoexec.bat')
 
 
 
-`os.path.isdir`和`os.path.isfile`调用可以告诉我们文件名是目录还是一个简单的文件。如果文件不存在，二者都会返回*False*
+`os.path.isdir`和`os.path.isfile`调用可以告诉我们文件名是目录还是一个简单的文件。如果文件不存在，二者都会返回*False*(也就是说不存在即暗示否定的意思)。我们还能得到用于分割和合并目录路径字符串的函数，它们会自动应用Python所在底层平台的目录命名惯例：
 
+```python
+import os
+os.path.split(r'C:\temp\data.txt')
+('C:\\temp', 'data.txt')
+
+os.path.join(r'C:\temp','output.txt')
+('C:\\temp\\output.txt')
+
+name = r'C:\temp\data.txt'		# windows路径风格
+os.path.dirname(name), os.path.basename(name)
+('C:\temp', 'data.txt')
+
+name = '/home/xth/temp/data.txt'	# Unix风格路径
+os.path.dirname(name), os.path.basename(name)
+('/home/xth/temp', 'data.txt')
+
+os.path.splitext(r'C:\example\python\demo.py')
+('C:\\example\\python\\demo', '.py')
+
+
+```
+
+`os.path.split`将文件名从它的目录路径中剥离出来，`os.path.join`则将它们合并起来，这两个调用都是可移植的，都自动采用所在平台的路径命名惯例。为了简便起见`dirname`和`basename`则调用返回了`split`返回结果的前两项，`splitext`则剥离了文件的扩展名。微妙之处在于，使用字符串的`split`和`join`方法几乎可以起到`os.sep`相同的作用，只是有细微区别：
+
+```python
+import os 
+os.sep
+'\\'
+
+pathname = r'C:\example\python\demo.py'
+os.path.split(pathname)		# 分割文件和目录
+('C:\\example\\python\\', 'demo.py')
+pathname.split(os.sep)		# 在每个斜杠处做分割
+('C', 'example', 'python', 'demo.py')
+
+os.sep.join(pathname.split(os.sep))
+'C:\\example\\python\\demo.py'
+
+os.path.join(*pathname.split(os.sep))
+'C:example\\python\\demo.py'
+```
+
+
+
+最后一个`join`调用要求传入参数（因此用了*），但因为Windows的驱动器句法的关系不插入第一个斜杠；如果这种区别影响到程序，可以转而使用前面的`str.join`方法。如果你的路径混用了
+Unix和Windows分隔符，这时`normpath`调用显得格外好用：
+
+```python
+import os
+mixed = 'C:\\temp\\public/files/index.html'
+os.path.normpath(mixed)
+'C:\\temp\\public\\files\\index.html'
+print()
+```
 
