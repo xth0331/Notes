@@ -167,6 +167,7 @@ import os
 mixed = 'C:\\temp\\public/files/index.html'
 os.path.normpath(mixed)
 'C:\\temp\\public\\files\\index.html'
-print()
+print(os.path.normpath(r'C\trmp\\sub\.\file,ext'))
+C:\temp\sub\file.ext
 ```
 
