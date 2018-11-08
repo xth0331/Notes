@@ -171,3 +171,21 @@ print(os.path.normpath(r'C\trmp\\sub\.\file,ext'))
 C:\temp\sub\file.ext
 ```
 
+这个模块还有`abspath`调用，他能可移植地返回文件的完整目录路径名。它负责将当前目录添加为前缀以及处理..父目录句法等：
+
+```python
+import os 
+os.getcwd()
+'C:\\Users'
+
+os.path.abspath('')			# 空字符串代表当前工作目录
+'C:\\Users'
+
+os.path.abspath('temp')		# 扩展为当前工作目录下的完整路径名
+'C:\\Users\\temp'
+
+os.path.abspath(r'demo\dev')
+'C:\\Users\\demo\\dev'
+
+```
+
