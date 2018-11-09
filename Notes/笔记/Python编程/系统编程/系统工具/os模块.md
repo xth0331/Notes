@@ -184,8 +184,28 @@ os.path.abspath('')			# 空字符串代表当前工作目录
 os.path.abspath('temp')		# 扩展为当前工作目录下的完整路径名
 'C:\\Users\\temp'
 
-os.path.abspath(r'demo\dev')
+os.path.abspath(r'demo\dev')	#相对于当前工作目录的不完整路径
 'C:\\Users\\demo\\dev'
 
+os.path.abspath('.')			# 扩展相对路径句法
+'C:\\Users'
+
+os.path.abspath('..')
+'C:\\'
+
+os.path.abspath(r'..\examples')
+'C:\\examples'
+
+os.path.abspath(r'C:\Python\examples')		# 绝对路径不变
+'C:\\Python\\examples'
+
+os.path.abspath(r'C:\temp\spam.txt')
+'C:\\temp\\spam.txt'
 ```
+
+在给出完整路径之前，文件名采用基于当前工作目录的相对路径，因此如果你想了解用户展示文件真正存储于哪个目录下，可以使用`os.path.abspath`函数来帮忙。
+
+##　在脚本里运行shell命令
+
+
 
