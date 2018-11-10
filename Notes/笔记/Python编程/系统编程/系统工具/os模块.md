@@ -207,5 +207,20 @@ os.path.abspath(r'C:\temp\spam.txt')
 
 ##　在脚本里运行shell命令
 
+os模块也是使得我们可以从Python脚本运行Shell命令。这个概念与流等密切相关，以下两个os函数使得脚本可以运行你在控制窗口输入的任意命令行：
 
+`os.system`
 
+​	在Python脚本中运行shell命令。
+
+`os.popen`
+
+​	运行shell命令并与其输入或输出流相连接。
+
+---------------
+
+*另外，相对较新的`subprocess`*模块可以对生成的shell命令流进行精细控制，而且可以代替(会增加代码复杂性)。
+
+### 运行shell命令
+
+虽然Python的命令行脚本有时被误解为“shell工具”，由于os模块的system和popen调用使得Python脚本可以运行底层系统shell可理解的任意命令 
