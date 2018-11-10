@@ -262,4 +262,27 @@ os.system('python helloshell.py')			# 运行一个Python程序
 output = os.popen('python helloshell.py').read()
 ```
 
-在这些例子里，发送到system和popen的命令行字符串都是硬编码的，
+在这些例子里，发送到system和popen的命令行字符串都是硬编码的，然而并不是说Python程序不能在运行时用普通的字符串运算（+，%等）来构建这种字符串。因为可以以这种方式动态地来创建并运行命令，所以`system`和`popen`将Pyrhon脚本变成了用于启动和组织其他程序灵活而可移植的工具。
+
+###　替代方法：subprocess模块
+
+
+
+一般来说，`subprocess`模块要求更多的代码，但对流的连接和使用提供跟完善的控制。当流的链接方式更为复杂时，显得格外有用。
+
+
+
+例如，这个新模块的`call`函数在运行简单的shell命令方面和`os.system`差不多，（运行`type`这种Windows下的shell命令是需要额外的协议，不过像“Python”这种普通的可执行程序是不需要的）：
+
+```python
+import subprocess
+subprocess.call('python helloshell.py')			#　类似os.system
+
+subprocess.call('cmd /C "type helloshell.py"')	 #	内建shell命令
+
+subprocess.call('type helloshell.py', shell=True)	# 相当于内建函数
+```
+
+--------------
+
+*这里请注意，最后一行代码中的`shell = True`。这个用法比较微妙，而且与平台相关。*
