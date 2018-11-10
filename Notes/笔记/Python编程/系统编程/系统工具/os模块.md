@@ -223,4 +223,43 @@ os模块也是使得我们可以从Python脚本运行Shell命令。这个概念�
 
 ### 运行shell命令
 
-虽然Python的命令行脚本有时被误解为“shell工具”，由于os模块的system和popen调用使得Python脚本可以运行底层系统shell可理解的任意命令 
+虽然Python的命令行脚本有时被误解为“shell工具”，由于os模块的system和popen调用使得Python脚本可以运行底层系统shell可理解的任意命令，物流他们是用Python还是其他语言编写的。例如下面这段代码，他在shell提示符后运行了刚才演示的那两条DOS shell命令：
+
+```python
+import os
+os.system.('dir /B')
+
+os.system('type helloworld.py')
+```
+
+
+
+###　与shell命令进行通信
+
+`os.system`函数只是简单地执行一条shell命令，`os.popen`还会连接到这个命令的标准输入\输出流；我们将得到一个类似文件的对象，他默认与命令的输出相连（向**popen**传入**w**模式标识符则与命令的输入流相连）。借助这个对象可以读取`popen`所派生的命令的输出结果，从而在输入命令行之后拦截那些在正常情况下将出现在控制窗口中的文字：
+
+```python
+import os 
+open('helloshell.py').read()
+"# a Python program\nprint('The meaning of Life')\n"
+
+text = os.popen('type helloshell.py').read()
+listing = os.popen('dir /B').readlinesd()
+print(listing)
+['helloshell.py\n', 'more.py', 'more.pyc', 'spam.txt', '__init__.py']
+```
+
+
+
+这里，我们先用常用的方法来抓取文件内容，然后将文件内容作为shell中`type`命令的输出。通过阅读`dir`命令的输出结果，我们可以获取目录中文件的列表，进而对这个列表进行迭代处理。
+
+到目前为止，我们运行了一些基本dos命令。因为这些调用可以运行我们能够在shell提示符输入任何命令，所以它们也可以用来启动其他Python脚本：
+
+```python
+import os 
+os.system('python helloshell.py')			# 运行一个Python程序
+
+output = os.popen('python helloshell.py').read()
+```
+
+在这些例子里，发送到system和popen的命令行字符串都是硬编码的，
