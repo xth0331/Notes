@@ -290,7 +290,49 @@ subprocess.call('type helloshell.py', shell=True)	# 相当于内建函数
 
 
 - 在Windows下，需要将`shell = True`的参数传给`call`等`subprocess`工具和`popen`工具，这样才能够运行shell内建命令。像`type`之类的Windows命令要求装有额外协议，但像“Python”这种普通程序不需要。
-
 - 在类Unix平台上，当`shell = False`（默认值）时，程序命令行直接由`os.execvp`运行，如果参数是True，那么这个程序将转由shell运行，而且你还可以借助其他参数来指定shell。
 
+除了模拟`os.system`,我们可以用类似方式让这个模块模拟前面用到的`os.popen`函数，在脚本中运行shell命令并获取其标准输出文本。
+
+```python
+import subprocess
+pipe = subprocess.Popen('python helloshell.py', stdout=subprocess.PIPE)
+pipe.communicate()
+(b'The Meaning of Life\r\n', None)
+pipe.returncode
+0
+```
+
+
+
 这里，我们将`stdout`流与管道连接，然后用`communicate`来运行命令，并接收它的标准输出流和错误输出流文本；运行完成后，命令的退出状态可作为属性来查看。或者，我们可以用其他接口直接读取命令的标准输出流，然后等待命令退出（并返回退出状态）：
+
+```python
+import subprocess
+pipe = subprocess.Popen('python helloshell.py', stdout=subprocess.PIPE)
+pipe.communicate()
+(b'The Meaning of Life\r\n', None)
+pipe.wait()
+0
+```
+
+实际上，`os.popen`函数和`subprocess.Popen`对象之间存在直接的映射关系：
+
+```python
+from subprocess import Popen, PIPE
+Popen('python helloshell.py', stdout=PIPE).communicate()[0]
+b'The Meaning of Life\r\n'
+
+import os 
+os.popen('python helloshell.py').read()
+'The Meaning of Life\n'
+```
+
+`subprocess`在这些简单的示例中显得多余。但我们需要更灵活地控制其他流时，它的作用就开始显现出来了。实际上，由于它允许我们以类似的方式处理命令的错误流和输出流，在Python3.X中`subprocess`取代了原先的`os.popen2`、`os.popen3`和`os.popen4`函数，他们都曾出现在Python2.X中，现在都只是`subprocess`对象接口的应用实例。因为这个模块更高级的应用实例涉及到标准流，
+
+###　shell的局限
+
+`system`和`popen`的两大局限。首先，尽管两个函数本身具有非常好的可移植性，但其真正分可移植程度决定于所运行的命令。例如前面那个DOS的`dir`和`type`shell命令的示例只在windows下有效，如果要在类Unix系统下运行，那么必须改为`ls`和`cat`命令。
+
+其次
+
