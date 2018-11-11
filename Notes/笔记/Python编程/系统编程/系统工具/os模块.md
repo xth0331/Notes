@@ -286,3 +286,11 @@ subprocess.call('type helloshell.py', shell=True)	# 相当于内建函数
 --------------
 
 *这里请注意，最后一行代码中的`shell = True`。这个用法比较微妙，而且与平台相关。*
+
+
+
+- 在Windows下，需要将`shell = True`的参数传给`call`等`subprocess`工具和`popen`工具，这样才能够运行shell内建命令。像`type`之类的Windows命令要求装有额外协议，但像“Python”这种普通程序不需要。
+
+- 在类Unix平台上，当`shell = False`（默认值）时，程序命令行直接由`os.execvp`运行，如果参数是True，那么这个程序将转由shell运行，而且你还可以借助其他参数来指定shell。
+
+这里，我们将`stdout`流与管道连接，然后用`communicate`来运行命令，并接收它的标准输出流和错误输出流文本；运行完成后，命令的退出状态可作为属性来查看。或者，我们可以用其他接口直接读取命令的标准输出流，然后等待命令退出（并返回退出状态）：
