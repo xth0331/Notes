@@ -334,5 +334,54 @@ os.popen('python helloshell.py').read()
 
 `system`和`popen`的两大局限。首先，尽管两个函数本身具有非常好的可移植性，但其真正分可移植程度决定于所运行的命令。例如前面那个DOS的`dir`和`type`shell命令的示例只在windows下有效，如果要在类Unix系统下运行，那么必须改为`ls`和`cat`命令。
 
-其次
+其次，像这样将Python文件作为程序运行与导入程序文件再调用其中的函数是截然不同的做法，而且一般来说前者要比后者慢得多。调用`os.system`和`os.popen`时，他们必须在你的操作系统中启动完全不同的独立程序，当程序文件作为模块导入时，Python解释器只是简单地在同一个进程里加载和运行文件的代码，借此生成模板对象。整个过程中不会派生出其他程序。
+
+将系统作为独立的程序来构建也有许多好处，他们允许程序间往返传递信息，但在很多情况下，导入模块构建系统更加快捷并且直接。
+
+如果打算用这些函数，还应当记住`os.system`函数通常会阻塞（其实是暂停）它的调用者，直到所启动的命令行程序退出。在Linux和类Unix平台上，所启动的命令行一般可独立于调用者，并与之并行地运行，只需要在命令行代码末尾追加上shell后台运算符`&`即可：
+
+```python
+import os 
+os.system("python program.py arg arg &")
+```
+
+在windows下，用dos的`start`命令通常也能使命令并行启动：
+
+```python
+import os 
+os.system("start program.py arg arg")
+```
+
+实际上，新近的Python版本中加入了`os.startfile`函数，这个函数会打开一个文件，无论文件类型是什么，就像鼠标单击一样：
+
+```python
+import os 
+os.startfile("webpage.html")		# 在你的浏览器中打开文件
+os.startfile("document.doc")		# 在Microsoft Word 中打开文件
+os.startfile("myscript.py")			# 用python运行文件
+```
+
+
+
+`os.popen`函数一般不会阻塞其调用者，但无论在Windows还是Linux下，如果管道对象在所启动的程序退出前关闭（如进行垃圾回收时），或是管道一次性完成读取（如`read()`方法），那么仍然有可能阻塞调用者。Unix分`os.fork/exec`调用和Windows的`os.spawnv`调用有人可用来不受阻塞困扰地调用并行运行程序。
+
+因为`os`模块的`system`和`popen`调用，以及`subprocess`模块也可归为程序启动、流量定向和进程间通信手段。
+
+### os模块到处的其他工具
+
+| 工具名       | 功能介绍                               |
+| ------------ | -------------------------------------- |
+| `os.environ` | 获取和设置shell环境变量                |
+| `os.fork`    | 在类Unix系统下派生新的子进程           |
+| `os.pipe`    | 负责程序间通信                         |
+| `os.execlp`  | 启动新程序                             |
+| `os.spawnv`  | 启动带有底层控制的新程序               |
+| `os.open`    | 打开基于底层描述符的文件               |
+| `os.mkdir`   | 创建新目录                             |
+| `os.mkfifo`  | 创建新的命名管道                       |
+| `os.stat`    | 获取文件底层信息                       |
+| `os.remove`  | 根据文件名删除文件                     |
+| `os.walk`    | 将函数或循环应用于整个目录树的各个部分 |
+
+诸如此类还有很多，特别需要注意的一点，`os`模块提供了一套文件处理调用，如`open`、`read`和`write`，但所有这些涉及底层的文件访问，它们与用Python内建`open`函数创建的`stdio`文件对象截然不同。通常情况下，除了非常特殊的文件处理需求（比如排他性访问文件锁打开文件），你应当使用内建的`open`函数，而不是`os`模块，来处理所有文件。
 
