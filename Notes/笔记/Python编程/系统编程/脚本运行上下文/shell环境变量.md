@@ -85,3 +85,10 @@ print('Hello,' os.environ['USER'])
 
 ## shell变量要点：父进程、putenv和getenv
 
+在Python的最顶层程序退出后，USER变量会变回初始值，赋给`os.environ`的键值被传到解释器外部，然后向下传给子进程；然而它永远不会向上传递到父进程（包括系统shell）。这个规划不是Python缺陷，在调用`putenv`库的C程序中同样如此。
+
+如果Python脚本处在你的应用顶层，这不会有什么问题，然而要谨记，在你的程序中对shell所做的设置只对程序本身以及它所衍生的子程序有效，如果想让你的设置在Python退出后仍然生效，你可以通过平台相关的扩展来实现。
+
+另一个微妙之处：在当前实现中，对`os.environ`的修改会自动调用`os.putenv`，后者将调用C库里的`putenv`把该设置导出到Python链接的C库里。然而，虽然对`os.environ`因此，与`os.putenv`相比，更推荐使用`os.environ`映射接口。
+
+同时要注意，环境设置是在程序启动时一次性载入`os.environ`，而非实时读取。因此，当程序启动后，底层的C库对环境设置的改动不会反应到`os.environ`上。如今，Python集中`os.getenv`调用，然而在绝大多数平台中，它也只是简单地转换对`os.environ`的读取，而不是通过C库的`getenv`接口的调用实现。大多数应用，尤其是纯Python代码不必介意于此，在没有`putenv`底层接口的平台上，可以将`os.environ`作为参数传递给启动程序来启动子程序。
