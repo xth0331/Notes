@@ -130,7 +130,7 @@ pipeline {
 
 Jenkinsfile (Scripted Pipeline)
 
-```json
+```groovy
 node {  
     stage('Build') { 
         // 
