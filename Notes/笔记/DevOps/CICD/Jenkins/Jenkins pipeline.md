@@ -68,3 +68,151 @@ Node是一个机器，是Jenkins环境的一部分，能够执行Pipeline。
 
 *此外，`node` block是Scripted Pipeline语法的关键部分。*
 
+### Stage
+
+`stage` block定义了通过整个Pipeline执行的概念上不同的任务子集（例如“构建”、“测试”和“部署”阶段），许多插件使用它来可视化或呈现管道状态/进度。
+
+### Step
+
+一项任务。从根本上说，一个步骤告诉Jenkins在特定时间点做什么（或者在过程中“步骤”）。例如，要执行shell命令`make`用`sh`,setp: sh‘ make’。当插件拓展Pipeline DSL时，通常意味着插件已经实现了一个新步骤。
+
+## Pipeline 语法概述
+
+一下Pipeline代码框架说明了Declarative Pipeline语法和Scripted Pipeline语法之间的 区别。
+
+
+
+### 声明式Pipeline基础
+
+在Declarative Pipeline语法中，`pipeline`block定义了整个Pipeline中完成的所有工作。
+
+Jenkinsfile (Declarative Pipeline)
+
+```groovy
+pipeline {
+    agent any 
+    stages {
+        stage('Build') { 
+            steps {
+                // 
+            }
+        }
+        stage('Test') { 
+            steps {
+                // 
+            }
+        }
+        stage('Deploy') { 
+            steps {
+                // 
+            }
+        }
+    }
+}
+```
+
+| 参数         | 含义                                         |
+| ------------ | -------------------------------------------- |
+| `agent any ` | 在任何可用的代理上执行此Pipeline或其任何阶段 |
+| `stage('Bulid')` | 定义构建阶段 |
+| `//` | 执行阶段相关的一些步骤 |
+| `stage('Test')` | 定义测试阶段 |
+| `//` | 执行测试阶段相关的一些步骤 |
+| `stage('Deploy)` | 定义部署阶段 |
+| `//` | 执行部署阶段相关的 一些步骤 |
+
+###　脚本式Pipeline基础
+
+在Scripted Pipeline语法中，一个或多个`node`在整个Pipeline中执行核心工作，虽然这不是Scripted Pipeline语法的强制要求，但将Pipeline的工作限制在`node`块内部有两个作用：
+
+1. 通过向Jenkins队列添加项目来计划要运行的块中包含的步骤。只要执行程序在节点上空闲，步骤就会运行。
+2. 创建工作空间（特定于该特定Pipeline的目录），可以对从源控件检出的文件执行工作。
+
+Jenkinsfile (Scripted Pipeline)
+
+```json
+node {  
+    stage('Build') { 
+        // 
+    }
+    stage('Test') { 
+        // 
+    }
+    stage('Deploy') { 
+        // 
+    }
+}
+```
+
+
+
+| 参数              | 含义                                         |
+| ----------------- | -------------------------------------------- |
+| `node`            | 在任何可用的代理上执行此Pipeline或其任何阶段 |
+| `stage('Build')`  | 定义构建阶段                                 |
+| `//`              | 执行阶段相关的一些步骤                       |
+| `stage('Test')`   | 定义测试阶段                                 |
+| `//`              | 执行测试阶段相关的一些步骤                   |
+| `stage('Deploy')` | 定义部署阶段                                 |
+| `//`              | 执行部署阶段相关的 一些步骤                  |
+
+## 管道示例
+
+下面是`Jenkinsfile`使用Declarative Pipeline 语法和Scripted Pipeline的示例：
+
+Jenkinsfile (Declarative Pipeline)
+
+```groovy
+pipeline { 
+    agent any 
+    stages {
+        stage('Build') { 
+            steps { 
+                sh 'make' 
+            }
+        }
+        stage('Test'){
+            steps {
+                sh 'make check'
+                junit 'reports/**/*.xml' 
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'make publish'
+            }
+        }
+    }
+}
+```
+
+
+
+Jenkinsfile (Scripted Pipeline)
+
+```groovy
+node { 
+    stage('Build') { 
+        sh 'make' 
+    }
+    stage('Test') {
+        sh 'make check'
+        junit 'reports/**/*.xml' 
+    }
+    stage('Deploy') {
+        sh 'make publish'
+    }
+}
+```
+
+| 参数       | 含义                                                         |
+| :--------- | :----------------------------------------------------------- |
+| `pipeline` | Declarative Pipeline特定语法，定义一个块，包含用于执行整个管道的内容和指令 |
+| `agent`    | Declarative Pipeline特定语法，指定Jenkins为整个Pipeline分配执行程序和工作空间 |
+| `stage`    | 描述此Pipeline的一个阶段                                     |
+| `steps`    | Declarative Pipeline特定语法，描述了stage                    |
+| `sh`       | 步骤，执行给定的shell命令                                    |
+| `junit`    | 另一个Pipelline步骤，用于聚合测试报告                        |
+| `node`     | Scripted Pipeline特定语法，指定了Jenkins在任何可用的代理/节点上执行此Pipeline |
+
+  
