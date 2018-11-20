@@ -14,8 +14,8 @@
 
 [程序设计基础](https://github.com/xth0331/Notes/tree/master/Notes/%E7%AC%94%E8%AE%B0/%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1)
 
-------------------
+-------------------
 
 
 
-*待补充*
+*待补充...*
