@@ -106,3 +106,15 @@ vrrp_instance RH_EXT {
 
 `interface`参数将物理接口名称分配给此特定虚拟IP实例。
 
+`virtual_route_id`是虚拟路由器实例的数字标识符。在参与此虚拟路由器的所有LVS路由器系统上必须相同。它用于区分`keepalived`在同一网络接口上运行的多个实例。
+
+`priority`所述分配分配界面接管在故障转移的顺序；数字越大，优先级越高。此优先级值在0到255的范围内，并且`state`配置为`MASTER`的优先级应设置为高于`state`配置为`BACKUP`的服务器 。
+
+`authentication`指定于对服务器进行身份验证以进行故障转移同步身份验证类型（`auth_type`）和密码(`auth_pass`)。`PAAS`指定密码认证；Keepalived还支持`AH`或验证标头以及实现连接完整性。
+
+最后，该`virtual_ipaddress`选项指定接口虚拟IP地址。
+
+#### 虚拟服务器定义
+
+LB1
+
