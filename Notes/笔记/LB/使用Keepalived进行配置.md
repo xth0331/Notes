@@ -116,5 +116,54 @@ vrrp_instance RH_EXT {
 
 #### 虚拟服务器定义
 
-LB1
+LB1和LB2上的`keepalived.conf`中文件的虚拟服务器定义部分相同。
 
+```bash
+virtual_server 10.0.0.1 80 {
+    delay_loop 6
+    lb_algo rr
+    lb_kind NAT
+    protocol TCP
+
+    real_server 192.168.1.20 80 {
+        TCP_CHECK {
+                connect_timeout 10
+        }
+    }
+    real_server 192.168.1.21 80 {
+        TCP_CHECK {
+                connect_timeout 10
+        }
+    }
+    real_server 192.168.1.22 80 {
+        TCP_CHECK {
+                connect_timeout 10
+        }
+    }
+    real_server 192.168.1.23 80 {
+        TCP_CHECK {
+                connect_timeout 10
+        }
+    }
+
+}
+```
+
+
+
+在此块中，`virtual_server`首先使用IP地址配置。然后`delay_loop`配置运行状况检查之间的时间量（以秒为单位）。`lb_algo`选项指定用于可用性的算法类型（在本例中，`rr`对于Round-Robin。`lb_kind`选项确定路由方法，在这种情况下使用网络地址转换（或`nat`）。
+
+配置虚拟服务器详细信息后`real_server`，再次通过首先指定IP地址来配置选项。该`TCP_CHECK`节使用TCP检查真实服务器的可用性。`connect_timeout`配置发生超时之前的秒数。
+
+| 算法名称                         | `lv_algo` |
+| -------------------------------- | --------- |
+| 轮循                             | `rr`      |
+| 加权循环法                       | `wrr`     |
+| 最小连接                         | `lc`      |
+| 加权最小连接                     | `wlc`     |
+| 基于位置的最小连接               | `lblc`    |
+| 具有复制的基于位置的最小连接调度 | `lblcr`   |
+| 目的地哈希                       | `dh`      |
+| 来源哈希                         | `sh`      |
+| 来源预期延迟                     | `sed`     |
+| 从不排队                         | `nq`      |
