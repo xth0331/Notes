@@ -72,3 +72,37 @@ vrrp_instance RH_INT {
 }
 ```
 
+LB2（备份路由）`keepalived.conf`中`vrrp_sync_group`段配置：
+
+```bash
+vrrp_sync_group VG1 {
+    group {
+        RH_EXT
+        RH_INT
+    }
+}
+
+vrrp_instance RH_EXT {
+    state BACKUP
+    interface eth0
+    virtual_router_id 50
+    priority 99
+    advert_int 1
+    authentication {
+        auth_type PAAS
+        auth_pass passw123
+    }
+    virtual_ipaddress {
+        192.168.1.1
+    }
+}
+```
+
+
+
+在这些示例中，`vrrp_sync_group`定义了通过任何状态更改（例如故障转移）保持在一起的VRRP组。为外部接口定义了一个与Internet通信（RH_EXT），以及用于内部接口（RH_INT）的实例。
+
+`vrrp_instance`详细说明了VRRP服务守护进程的虚拟接口配置，守护进程创建虚拟IP实例。`state MASTER`指定活动服务器，`state BACKUP`指定备份服务器。
+
+`interface`参数将物理接口名称分配给此特定虚拟IP实例。
+
