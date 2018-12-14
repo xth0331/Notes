@@ -54,7 +54,7 @@ rpmbuild/
 
 SPEC文件可以被任务是`rpmbuild`程序用于构建RPM的方法。通过定义指令来告诉构建系统要做什么，这些部分在`Preamble`和`Body`中定义。`Preamble`包含`Body`中使用的一系列元数据项。`Body`包含说明的主要部分。
 
-#### Preamble 项目
+#### Preamble 项
 
 列出RPM SPEC文件中的Preamble部分的选项：
 
@@ -83,3 +83,12 @@ python-2.7.5-76.el7.x86_64
 ```
 
 这里`python`是Package Name，`2.7.5`是Version，`76.el7`是Release，`x86_64`是体系结构，与**NVR**不同，体系结构标记不受RPM包装程序的直接控制，而是由`rpmbuild`构建环境定义。例外是与架构无关的`noarch`包。
+
+####  Body 项
+
+此表列出了RPM SPEC文件的Body部分中使用的项：
+
+| SPEC指令 | 定义 |
+| -------- | ---- |
+|          |      |
+
