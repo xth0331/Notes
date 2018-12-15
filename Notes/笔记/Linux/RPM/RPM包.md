@@ -135,3 +135,201 @@ rpm --eval %{?dist}
 
 
 
+### 使用SPEC文件
+
+将软件打包成RPM的很多一部分工作时编辑SPEC文件。
+
+要打包新软件，需要创建一个新的SPEC文件，不要从头开始手动编写，使用`rpmdev-new-spec`命令。它会创建一个未填充的SPEC文件，并填写必要的指令和字段。
+
+```bash
+rpmdev-newspec bello
+```
+
+生成的`bello.spec`内容如下：
+
+```bash
+Name:           bello
+Version:
+Release:        1%{?dist}
+Summary:
+
+License:
+URL:
+Source0:
+
+BuildRequires:
+Requires:
+
+%description
+
+
+%prep
+%setup -q
+
+
+%build
+%configure
+make %{?_smp_mflags}
+
+
+%install
+rm -rf $RPM_BUILD_ROOT
+%make_install
+
+
+%files
+%doc
+
+
+
+%changelog
+```
+
+完善`bello.spec`内容：
+
+```bash
+Name:           bello
+Version:        0.1
+Release:        1%{?dist}
+Summary:        Hello World example implemented in bash script
+
+License:        GPLv3+
+URL:            https://www.example.com/%{name}
+Source0:        https://www.example.com/%{name}/releases/%{name}-%{version}.tar.gz
+
+Requires:       bash
+
+BuildArch:      noarch
+
+%description
+The long-tail description for our Hello World Example implemented in
+bash script.
+
+%prep
+%setup -q
+
+%build
+
+%install
+
+mkdir -p %{buildroot}/%{_bindir}
+
+install -m 0755 %{name} %{buildroot}/%{_bindir}/%{name}
+
+%files
+%license LICENSE
+%{_bindir}/%{name}
+
+%changelog
+* Tue May 31 2016 Adam Miller <maxamillion@fedoraproject.org> - 0.1-1
+- First bello package
+- Example second item in the changelog for version-release 0.1-1
+```
+
+完善`bello.spec`内容：
+
+```bash
+Name:           pello
+Version:        0.1.1
+Release:        1%{?dist}
+Summary:        Hello World example implemented in python
+
+License:        GPLv3+
+URL:            https://www.example.com/%{name}
+Source0:        https://www.example.com/%{name}/releases/%{name}-%{version}.tar.gz
+
+BuildRequires:  python
+Requires:       python
+Requires:       bash
+
+BuildArch:      noarch
+
+%description
+The long-tail description for our Hello World Example implemented in
+Python.
+
+%prep
+%setup -q
+
+%build
+
+python -m compileall %{name}.py
+
+%install
+
+mkdir -p %{buildroot}/%{_bindir}
+mkdir -p %{buildroot}/usr/lib/%{name}
+
+cat > %{buildroot}/%{_bindir}/%{name} <<-EOF
+#!/bin/bash
+/usr/bin/python /usr/lib/%{name}/%{name}.pyc
+EOF
+
+chmod 0755 %{buildroot}/%{_bindir}/%{name}
+
+install -m 0644 %{name}.py* %{buildroot}/usr/lib/%{name}/
+
+%files
+%license LICENSE
+%dir /usr/lib/%{name}/
+%{_bindir}/%{name}
+/usr/lib/%{name}/%{name}.py*
+
+%changelog
+* Tue May 31 2016 Adam Miller <maxamillion@fedoraproject.org> - 0.1.1-1
+  - First pello package
+```
+
+完善`cello.spec`：
+
+```bash
+Name:           cello
+Version:        1.0
+Release:        1%{?dist}
+Summary:        Hello World example implemented in C
+
+License:        GPLv3+
+URL:            https://www.example.com/%{name}
+Source0:        https://www.example.com/%{name}/releases/%{name}-%{version}.tar.gz
+
+Patch0:         cello-output-first-patch.patch
+
+BuildRequires:  gcc
+BuildRequires:  make
+
+%description
+The long-tail description for our Hello World Example implemented in
+C.
+
+%prep
+%setup -q
+
+%patch0
+
+%build
+make %{?_smp_mflags}
+
+%install
+%make_install
+
+%files
+%license LICENSE
+%{_bindir}/%{name}
+
+%changelog
+* Tue May 31 2016 Adam Miller <maxamillion@fedoraproject.org> - 1.0-1
+- First cello package
+```
+
+ `/etc/rpmdevtools/`目录中有几种流行语言SPEC文件模板。
+
+## 构建RPMS
+
+RPM是使用`rpmbuild`构建的。
+
+方案：
+
+1. 构建源RPM
+2. 构建二进制RPM
+
+`rpmbuild`需要某个目录和文件结构。这与`rpmdev-setuptree`程序设置的结构相同。
