@@ -226,7 +226,7 @@ install -m 0755 %{name} %{buildroot}/%{_bindir}/%{name}
 - Example second item in the changelog for version-release 0.1-1
 ```
 
-完善`bello.spec`内容：
+完善`pello.spec`内容：
 
 ```bash
 Name:           pello
@@ -333,3 +333,93 @@ RPM是使用`rpmbuild`构建的。
 2. 构建二进制RPM
 
 `rpmbuild`需要某个目录和文件结构。这与`rpmdev-setuptree`程序设置的结构相同。
+
+### 源RPMS
+
+为什么要构建源RPM（SRPM）?
+
+1. 保留不是道环境的RPM的某个Name-Version-Release的确切来源。这包括确切的SPEC文件，源代码和所有相关补丁。这对于回顾历史记录和调试很有用。
+2. 能够在不同硬件平台或体系架构上构建二进制RPM。
+
+
+
+#### 创建SRPM
+
+```bash
+rpmbuild -bs SPECFILE
+```
+
+这里，我们建立`bello`、`pello`、`cello`的SRPM。
+
+```bash
+cd ~/rpmbuild/SPECS/
+rpmbuild -bs bello.spec
+写道:/root/rpmbuild/SRPMS/bello-0.1-1.el7.centos.src.rpm
+rpmbuild -bs cello.spec
+写道:/root/rpmbuild/SRPMS/cello-1.0-1.el7.centos.src.rpm
+rpmbuild -bs pello.spec
+写道:/root/rpmbuild/SRPMS/pello-0.1.1-1.el7.centos.src.rpm
+```
+
+
+
+> 注意，SRPM被防止在`rpmbuild/SRPMS`目录中，
+
+
+
+### 二进制RPMS
+
+构建二进制RPM有两种方法：
+
+1. 使用`rpmbuild --rebuild`命令重建。
+2. 使用`rpmbuild -bb`命令从SPEC文件构建，`-bb`选项代表构建二进制。
+
+#### 从源RPM重建
+
+要从源RPM重`bello`、`cello`以及`pello`，运行：
+
+```bash
+rpmbuild --rebuild ~/rpmbuild/SRPMS/bello-0.1-1.el7.centos.src.rpm
+rpmbuild --rebuild ~/rpmbuild/SRPMS/cello-1.0-1.el7.centos.src.rpm
+rpmbuild --rebuild ~/rpmbuild/SRPMS/pello-0.1.1-1.el7.centos.src.rpm
+```
+
+- 创建二进制RPM时生成的输出是详细的，有助于调试
+- 调用`rpmbuild --rebuild`：
+  - 将SRPM内容安装到`~/rpmbuild/`。
+  - 使用已安装的内容构建。
+  - 删除SPEC和源码。
+
+如果想要保留SPEC和源码，有两个办法：
+
+1. 构建时使用`--recompile`而不是`--rebuild`。
+
+2. 使用一下命令安装SRPM：
+
+   ```bash
+   rpm -Uvh 
+   ```
+
+
+#### 从SPEC构建二进制文件
+
+```bash
+rpmbuild --bb ~/rpmbuild/SPEC/bello.spec
+rpmbuild --bb ~/rpmbuild/SPEC/cello.spec
+rpmbuild --bb ~/rpmbuild/SPEC/pello.spec
+```
+
+## 检查RPM
+
+使用`rpmlint`检查RPM包:
+
+```bash
+rpmlint ~/build/RPMS/x86_64/cello-1.0-1.el7.x86_64.rpm
+```
+
+使用`rpmlint`检查SPEC文件：
+
+```bash
+rpmlint ~/rpmbuild/SPECS/cello.spec
+```
+
