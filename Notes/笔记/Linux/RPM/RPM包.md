@@ -390,7 +390,7 @@ rpmbuild --rebuild ~/rpmbuild/SRPMS/pello-0.1.1-1.el7.centos.src.rpm
   - 使用已安装的内容构建。
   - 删除SPEC和源码。
 
-如果想要保留SPEC和源码，有两个办法：
+如果想要保留SPEC和源码，有以下两个办法：
 
 1. 构建时使用`--recompile`而不是`--rebuild`。
 
