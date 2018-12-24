@@ -14,7 +14,7 @@ Tuned是一个守护进程，用于`udev`监视连接的设备，并根据所选
 
 ## 插件
 
-`tuned`使用两种类型的插件：*monitoring plugins*和,*monitoring plugins*,目前有一下monitoring plugins：
+`tuned`使用两种类型的插件：*tuning plugins*和,*monitoring plugins*,目前有一下monitoring plugins：
 
 - disk
 
@@ -27,3 +27,10 @@ Tuned是一个守护进程，用于`udev`监视连接的设备，并根据所选
 - load
 
   获取每个CPU的CPU负载和测量间隔。
+
+可能通*tuning plugins*进行动态调整来使用*monitoring plugins*的输出。当前实现的动态调整算法尝试平衡性能和`powersave`,因此在性能配置文件中被禁用（可以在`tuned`配置文件中启用或禁用各个插件的动态调整）。只要任何启用的调优插件需要其指标，*monitoring plugins*就会自动实例化，如果两个*tuning plugins*需要相同的数据，则只创建一个*monitoring plugins*实例并共享数据。
+
+每个*tuning plugins*都会调整单个子系统，并从**调整后的**配置文件中获取几个参数。每个子系统可以具有多个设备（例如，多个CPU或网卡），这些设备由*tuning plugins*的各个实例处理。还支持各个设备的特定设置。提供的配置文件使用通配符来匹配各个子系统的所有设备，这允许插件根据所需膜表调整这些子系统（选定的配置文件）并且用户唯一需要做的就是选择正确的`tuned`配置文件。
+
+目前，实现了以下*tuning plugins*：
+
