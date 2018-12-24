@@ -12,3 +12,18 @@ Tuned是一个守护进程，用于`udev`监视连接的设备，并根据所选
 
 动态`tuned`默认是禁用的，可以更改`/etc/tuned/tuned-main.conf`文件中的`dynamic_tuning`为`1`来启用。
 
+## 插件
+
+`tuned`使用两种类型的插件：*monitoring plugins*和,*monitoring plugins*,目前有一下monitoring plugins：
+
+- disk
+
+  获取每个设备的磁盘负载（IO操作数）和测量间隔。
+
+- net
+
+  获取每个网卡的网络负载（传输的数据包数）和测量间隔。
+
+- load
+
+  获取每个CPU的CPU负载和测量间隔。
