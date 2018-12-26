@@ -52,3 +52,40 @@ Tuned是一个守护进程，用于`udev`监视连接的设备，并根据所选
 
 ​	设置`sysctl`插件参数指定的各种设置。语法为`name = value`，其中`name`与`sysctl`工具提供的名称相同。如果需要更改其他插件未涵盖的设置，请使用此插件。
 
+**usb**
+
+​	将USB设备的自动暂停超时设置为`autosuspend`参数指定的值。0表示禁用自动挂起。
+
+**audio**
+
+​	将音频解码器的自动暂停超时设置为`timeout`参数指定的值。目前`snd_hda_intel`和`snd_ac97_aodec`得到支持。该值为0表示禁用自动暂停。
+
+**disk**
+
+将电梯设置为*elevator*参数指定的值。它还将ALPM设置为参数指定的值*alpm*，ASPM为参数指定的值*aspm*，scheduler quantum为*scheduler_quantum*参数指定的值，disk spindown timeout为*spindown*参数指定的值，disk readahead为指定的值*readahead*参数，可以将当前磁盘预读值乘以*readahead_multiply*参数指定的常量。此外，此插件根据当前驱动器利用率动态更改驱动器的高级电源管理和spindown超时设置。动态调整可以通过布尔参数控制*dynamic*，默认情况下启用。
+
+**mounts**
+
+根据*disable_barriers*参数的布尔值启用或禁用装载障碍。
+
+**script**
+
+此插件可用于执行在加载或卸载配置文件时运行的外部脚本。该脚本由一个参数调用，该参数可以是`start`或`stop`（它取决于在配置文件加载或卸载期间是否调用脚本）。脚本文件名可以由*script*参数指定。请注意，您需要在脚本中正确实现停止操作并恢复在启动操作期间更改的所有设置，否则回滚将不起作用。为了您的方便，`functions`默认情况下安装Bash帮助程序脚本，允许您导入和使用其中定义的各种函数。请注意，此功能主要是为了向后兼容性而提供的，建议您将其用作最后的手段，如果它们涵盖了所需的设置，则更喜欢其他插件。
+
+**sysfs**
+
+设置`sysfs`插件参数指定的各种设置。语法是`name`= `value`，其中`name`是`sysfs`要使用的路径。如果您需要更改其他插件未涵盖的某些设置，请使用此插件（如果它们涵盖了所需的设置，请选择特定的插件）。
+
+**video**
+
+在视频卡上设置各种powersave级别（目前仅支持Radeon卡）。可以使用*radeon_powersave*参数指定powersave级别。支持的值是：`default`，`auto`，`low`，`mid`，`high`，和`dynpm`。
+
+bootloader
+
+将参数添加到内核引导命令行。此插件支持旧版GRUB 1，GRUB 2以及带可扩展固件接口（EFI）的GRUB。可以通过*grub2_cfg_file*选项指定grub2配置文件的自定义非标准位置。参数将添加到当前grub配置及其模板中。需要重新启动计算机才能使内核参数生效。
+
+可以通过以下语法指定参数：
+
+``` 
+cmdline= arg 1 arg 2 ... arg n。
+```
