@@ -34,3 +34,12 @@ Tuned是一个守护进程，用于`udev`监视连接的设备，并根据所选
 
 目前，实现了以下*tuning plugins*：
 
+**cpu**
+
+​	将CPU调度器设置为`governor`参数指定的值，并根据CPU负载动态更改PM Qos CPU DMA延迟。如果CPU负载低于*load_threshold*参数指定的值，则将latency设置为*latency_high*参数指定的值，否则将其设置为*latency_low*指定的值。侧歪，可以将延迟强制为特定值，而无需进一步动态更改。这可以通过将*force_latency*参数设置为所需的延迟值来实现。
+
+
+
+**eeepc_she**
+
+​	
