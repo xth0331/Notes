@@ -86,6 +86,85 @@ bootloader
 
 可以通过以下语法指定参数：
 
-``` 
+```bash
 cmdline= arg 1 arg 2 ... arg n。
 ```
+
+
+
+
+
+## 安装及其使用
+
+要安装tuned， 运行：
+
+```bash
+yum install tuned
+```
+
+`tuned`包还预设了最合适系统的配置文件。目前根据以下可自定义规则选择默认配置文件：
+
+`throughput-performance`
+
+​	这是在充当计算节点操作系统上预先选择的。此类型目标是最佳吞吐量性能。
+
+`virtual-guest`
+
+​	这是在虚拟机上预先选择的。目标是最佳表现。如果对性能不感兴趣，可以希望将其修改为`balanced`或`powersave`配置文件。
+
+`balanced`
+
+​	这是在所有其他情况下预先选择的。目标是平衡性能和功耗。
+
+要启动`tuned`运行：
+
+```bash
+systemctl start tuned
+```
+
+开机启动：
+
+```bash
+systemctl enable tuned
+```
+
+`tuned`控制。例如选择配置文件和其他：
+
+```bash
+tuned-adm
+```
+
+此命令要求`tuned`服务在运行。
+
+要查看可用的已安装配置文件，运行：
+
+```bash
+tuned-adm list
+```
+
+要查看当前激活的配置文件，运行：
+
+```bash
+tuned-adm active
+```
+
+要选择或激活配置文件,运行:
+
+```bash
+tuned-adm profile profile
+```
+
+可以一次选择多个配置文件。应用程序将尝试在装载过程中合并他们，如果存在冲突，则最后指定的配置文件中的设置优先。这是自动完成的，下面示例优化系统以便在虚拟机中获得最佳性能，并同事针对低功耗进行调整，低功耗作为优先级：
+
+```bash
+tuned-adm prfile virtual-guest powersave
+```
+
+
+
+要让`tuned`建议您为系统选择最合适的配置文件，而不更改任何现有配置文件并使用安装期间使用的相同逻辑，运行：
+
+```bash
+tuned-adm recommend
+```
+
