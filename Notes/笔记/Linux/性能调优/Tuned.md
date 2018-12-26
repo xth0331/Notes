@@ -42,4 +42,13 @@ Tuned是一个守护进程，用于`udev`监视连接的设备，并根据所选
 
 **eeepc_she**
 
-​	
+​	根据CPU负载情况动态设置FSB速度；一般不需要配置，如果CPU负载低于或等于`load_threshold_powersave`参数指定的值，则插件将FSB速度设置为参数指定的值。
+
+**net**
+
+​	将`wake-on-lan`配置为`wake_on_lan`参数指定的值。还根据接口利用率动态改变接口速率。
+
+**sysctl**
+
+​	设置`sysctl`插件参数指定的各种设置。语法为`name = value`，其中`name`与`sysctl`工具提供的名称相同。如果需要更改其他插件未涵盖的设置，请使用此插件。
+
