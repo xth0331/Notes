@@ -194,4 +194,41 @@ type=TYPE
 decices=DEVICES
 ```
 
-`NAME`是日志中使用的插件实例名称。它可以是任意字符串。`TYPE`是插件类型。`DEVICES`是此插件实例将处理的设备列表。`devices`行可以包含列表，通配符和否定。您还可以组织规则。如果没有`decices`行，则系统中存在或稍后附加的所有设备`TYPE`将由插件实例处理。如果未配置插件的实例，则不会启用插件，如果插件支持更多选项，可以在插件部分指定它们。如果未指定该选项，
+`NAME`是日志中使用的插件实例名称。它可以是任意字符串。`TYPE`是插件类型。`DEVICES`是此插件实例将处理的设备列表。`devices`行可以包含列表，通配符和否定。您还可以组织规则。如果没有`decices`行，则系统中存在或稍后附加的所有设备`TYPE`将由插件实例处理。如果未配置插件的实例，则不会启用插件，如果插件支持更多选项，可以在插件部分指定它们。如果未指定该选项，则将使用默认值。
+
+**描述实例**
+
+以下示例将匹配`sd`开头的内容，例如`sda`或`sdb`,并且不会禁它们的障碍：
+
+```bash
+[data_disk]
+type=disk
+devices=sd*
+disable_barriers=false
+```
+
+以下示例将匹配除`sda1`和`sda2`之外的所有内容：
+
+```bash
+[data_disk]
+type=disk
+devices=!sda1. !sda2
+disable_barriers=false
+```
+
+> 如果不需要插件实例的自定义命名，并且配置文件中只有一个实例定义，Tuned支持以下简短语法：
+
+```bash
+[TYPE]
+devices=DEVICES
+```
+
+在这种情况下，可以省略`TYPE`行，然后将使用与类型相同的名称引用该实例。之前的示例可以重写为：
+
+```bash
+[disk]
+devices=sdb*
+disable_barriers=false
+```
+
+如果使用`include`选项多次指定相同的部分，则合并设置。如果由于冲突
