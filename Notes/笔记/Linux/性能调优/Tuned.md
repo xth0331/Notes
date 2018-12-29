@@ -270,3 +270,41 @@ cmdline=isolcpus=2
 tuned-adm list
 ```
 
+要仅显示当前活动的配置文件，运行：
+
+```bash
+tuned-adm active
+```
+
+要切换到其中一个可用的配置文件，运行：
+
+```bash
+tuned-adm profile PROFILE_NAME
+```
+
+例如：
+
+```bash
+tuned-adm profile latency-performance
+```
+
+要禁用所有：
+
+```bash
+tuned-adm off
+```
+
+以下是默认的预置的配置文件列表：
+
+| 配置文件                 | 描述                                                         |
+| ------------------------ | ------------------------------------------------------------ |
+| `balanced`               | 默认节能配置文件。旨在成为性能和功耗之间的折衷。尽可能尝试使用自动缩放和自动调整。对大多数负载都有很好的效果。唯一的缺点是延迟增加。 |
+| `powersave`              | 最佳节能配置文件。可以牺牲性能以最小化实际功耗。在当前的`tuned`版本中，它可以在`SATA`主机适配实现USB自动挂起等省电方式。 |
+| `throughput-performance` |                                                              |
+|                          |                                                              |
+|                          |                                                              |
+|                          |                                                              |
+|                          |                                                              |
+|                          |                                                              |
+|                          |                                                              |
+
