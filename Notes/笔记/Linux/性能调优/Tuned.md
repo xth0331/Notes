@@ -296,15 +296,48 @@ tuned-adm off
 
 以下是默认的预置的配置文件列表：
 
-| 配置文件                 | 描述                                                         |
-| ------------------------ | ------------------------------------------------------------ |
-| `balanced`               | 默认节能配置文件。旨在成为性能和功耗之间的折衷。尽可能尝试使用自动缩放和自动调整。对大多数负载都有很好的效果。唯一的缺点是延迟增加。 |
-| `powersave`              | 最佳节能配置文件。可以牺牲性能以最小化实际功耗。在当前的`tuned`版本中，它可以在`SATA`主机适配实现USB自动挂起等省电方式。 |
-| `throughput-performance` |                                                              |
-|                          |                                                              |
-|                          |                                                              |
-|                          |                                                              |
-|                          |                                                              |
-|                          |                                                              |
-|                          |                                                              |
+| 配置文件                  | 描述                                                         |
+| ------------------------- | ------------------------------------------------------------ |
+| `balanced`                | 默认节能配置文件。旨在成为性能和功耗之间的折衷。尽可能尝试使用自动缩放和自动调整。对大多数负载都有很好的效果。唯一的缺点是延迟增加。 |
+| `powersave`               | 最佳节能配置文件。可以牺牲性能以最小化实际功耗。在当前的`tuned`版本中，它可以在`SATA`主机适配实现USB自动挂起等省电方式。 |
+| `throughput-performance`  | 针对高吞吐量优化的服务器配置文件它禁用节能机制并启用`sysctl`设置，提高磁盘，网络I/O的吞吐量性能并切换到`deadline`调度程序。CPU调控器为`performance`。 |
+| `latency-performance`     | 针对低延迟优化服务器配置文件。它禁用省电机制并启用`sysctl`设置以改善延迟。CPU调控器设置为`performance`并且CPU锁定到低C状态。 |
+| `network-latency`         | 用于低延迟网络的配置文件。基于`latency-performance`设置，禁用透明大页面，NUMA平衡和调整其他几个网络相关的`sysctl`参数。 |
+| `network-throughput`      | 吞吐量网络的配置文件，基于`throughput-performance`，增加了内核网络缓冲区。 |
+| `virtual-guest`           | 基于`enterprise-storage`配置文件，除其他任务外，还可减少虚拟内存并增加磁盘预读值。不会禁用磁盘障碍。 |
+| `virtual-host`            | 基于`enterprise-storage`配置文件，减少虚拟内存吞吐量，增加磁盘预读值并启用更强大的脏页值。 |
+| `oracle`                  | 基于`throughput-performance`配置文件，针对oracle数据库优化，禁用透明的大页面并修改其他一些与性能相关的内核参数。 |
+| `desktop`                 | 基于`balanced`配置文件。还支持调度程序自动组，以便更高的相应交互式程序。 |
+| `default`                 | 只启动CPU和磁盘插件。                                        |
+| `desktop-powesave`        | 针对桌面系统的节能配置文件。                                 |
+| `lapto-ac-powersave`      | 针对运行AC的笔记本电脑节能配置文件。                         |
+| `lapto-battery-powersave` | 针对笔记本节能配置文件。                                     |
+| `spindown-disk`           | 经典HDD的机器的节能配置文件，最大限度地延长spindown时间。禁用省电机制，禁用USB自动挂起，禁用蓝牙，启用WiFi省电，禁用日志同步，增加磁盘回写时间，降低磁盘刷新，使用`noatime`选项重新挂载所有分区。 |
+| `enterprise-storage`      | 针对企业级存储的服务器配置文件，最大化I/O吞吐量，禁用非root和非引导分区上的障碍。 |
+
+
+
+## powertop2tuned
+
+`powertop2tuned`是一个实用程序，允许从`PowerTOP`建议创建自定义`tuned`配置文件。
+
+要安装请运行:
+
+```bash
+yum install tuned-utils
+```
+
+创建一个自定义配置文件，运行：
+
+```bash
+powertop2tuned NEW_PROFILE_NAME
+```
+
+默认情况下，它会在`/etc/tuned`目录中创建配置文件，并将其基于当前选定的配置文件。出于安全原因，最初在新配置文件中禁用所有`PowerTOP`调整，要使他们能够在`/etc/tuned/profile/tuned.conf`中取消对您感兴趣的调整。可以使用`--enable` 或者`-e`选项生成新的配置文件，其中包含启用`PowerTOP`建议的大多数调整。一些危险和调整，如USB自动暂停仍将被禁用。如果确实需要它们，必须手动取消注释。默认情况下，不会激活新的配置文件，要激活请运行如下命令：
+
+```bash
+tuned-adm profile NEW_PROFILE_NAME
+```
+
+## 使用tuned和tuned-adm进行性能调优
 
