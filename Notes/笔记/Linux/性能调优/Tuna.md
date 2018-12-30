@@ -1,2 +1,113 @@
 # Tuna
 
+可以使用`tuna`程序调整调度程序可调参数，调整线程优先级，`IRQ`处理程序以及隔离CPU核心和套接字，`tuna`旨在降低执行调优任务的复杂性。
+
+
+
+## 用tuna查看系统
+
+可以使用`tuna`显示系统当前正在发生的情况。
+
+查看当前的策略和优先事项，使用`tuna --show_threads`命令：
+
+```bash
+tuna --show_threads
+                      线程       ctxt_switches
+  pid   SCHED_   rtpri affinity voluntary nonvoluntary           cmd
+  1      OTHER     0      0,1      1741         1927         systemd
+  2      OTHER     0      0,1       162            0        kthreadd
+  3      OTHER     0        0      1372            0     ksoftirqd/0
+  5      OTHER     0        0         8            0    kworker/0:0H
+  6      OTHER     0      0,1       136            0  kworker/u256:0
+  7       FIFO    99        0       329            0     migration/0
+  8      OTHER     0      0,1         2            0          rcu_bh
+  9      OTHER     0      0,1     21314            0       rcu_sched
+  10      FIFO    99        0      2132            0      watchdog/0
+  11      FIFO    99        1      2132            0      watchdog/1
+  12      FIFO    99        1       279            0     migration/1
+  13     OTHER     0        1       786            0     ksoftirqd/1
+  15     OTHER     0        1        11            0    kworker/1:0H
+  17     OTHER     0      0,1       162            0       kdevtmpfs
+  18     OTHER     0      0,1         2            0           netns
+  19     OTHER     0      0,1        72            0      khungtaskd
+  20     OTHER     0      0,1         2            0       writeback
+```
+
+
+
+想要仅显示与PID对应的特定线程或匹配命令名称，在`--show_threads`之前添加`--threads`:
+
+```bash
+tuna --threads=PID_OR_CMD_LIST --show_threads
+```
+
+查看当前中断请求（IRQ）及其相关性，使用`tuna --show_irqs`命令：
+
+```bash
+tuna --show_irqs
+```
+
+仅显示与IRQ编号对应的特定中断请求或匹配IRQ用户名，在`--show_irqs`之前添加`--irqs`选项：
+
+```bash
+tuna --irqs=NUMBER_OR_USER_LIST --show_irqs
+```
+
+## 使用tuna调整CPU
+
+`tuna`命令可以针对单个CPU，要列出系统上的CPU，`/proc/cpuinfo`文件可以获取详细信息。
+
+要指定受命令影响的CPU列表，使用：
+
+```bash
+tuna --cpus=CPU_LIST --COMMAND
+```
+
+隔离CPU会导致当前该CPU上运行的所有任务移动到下一个可用的CPU。要隔离CPU，使用：
+
+```bash
+tuna --cpus=CPU_LIST --isolate
+```
+
+包含CPU允许线程在指定的CPU上运行。要包含CPU，运行：
+
+```bash
+tuna --cpu=CPU_LIST --include
+```
+
+`CPU_LIST`参数是逗号分隔的CPU编号列表。例如，`--cpus=0,2`。
+
+## 使用tuna调整IRQS
+
+要查看系统上当前运行的IRQ列表，查看`/proc/interrpupts`文件。也可以使用`tuna --show_irqs`命令。
+
+要指定受命令影响的IRQ列表，使用`–irqs`参数：
+
+```bash
+tuna --irqs=IRQ_LIST --COMMAND
+```
+
+要将终端移动到指定的CPU，请使用`--move`参数：
+
+```bash
+tuna --irqs=IRQ_LIST --cpus=CPU_LIST --move
+```
+
+`IRQ_LIST`参数是逗号分隔的`IRQ`编号或用户名模式的列表。
+
+`CPU_LIST`参数是逗号分隔的CPU编号列表。例如，`--cpus=0,2`。
+
+例如，要定位名称以`sfc1`开头的所有的中断，并将他们分布在两个CPU：
+
+```bash
+tuna --irqs=sfc1\* --cpus=7,8 --move --spread
+```
+
+要验证设置，使用`--move`参数修改`IRQ`之前和之后使用`-show_irqs`参数：
+
+```bash
+tuna --irqs=128 --show_irqs
+tuna --irqs=128 --cpus=3 --move
+tuna --irqs=128 --show_irqs
+```
+
