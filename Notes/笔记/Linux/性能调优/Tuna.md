@@ -147,7 +147,7 @@ tuna --rhreads=sshd --show_threads --priority=RR:40 --show_threads
 
 以下示例使用具有四个或更多处理器的系统，并显示如何使所有`ssh`线程在CPU 0和1以及`http`CPU 2和3上的所有线程上运行。
 
-```
+```bash
 tuna --cpus=0,1 --threads=ssh\* --move --cpus=2,3 --threads=http\* --move
 ```
 
@@ -164,7 +164,7 @@ tuna --cpus=0,1 --threads=ssh\* --move --cpus=2,3 --threads=http\* --move
 
 以下示例使用`--show_threads`（`-P`）参数显示当前配置，然后测试所请求的更改是否按预期进行。
 
-```
+```bash
 tuna --threads=gnome-sc\* \
         --show_threads \
         --cpus=0 \
