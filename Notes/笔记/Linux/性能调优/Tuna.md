@@ -140,3 +140,67 @@ tuna --rhreads=sshd --show_threads --priority=RR:40 --show_threads
 ```
 
 这允许比较更改之前和之后所选线程的状态。
+
+## tuna配置示例
+
+**将任务分配给特定CPU**
+
+以下示例使用具有四个或更多处理器的系统，并显示如何使所有`ssh`线程在CPU 0和1以及`http`CPU 2和3上的所有线程上运行。
+
+```
+# tuna --cpus=0,1 --threads=ssh\* --move --cpus=2,3 --threads=http\* --move
+```
+
+上面的示例命令按顺序执行以下操作：
+
+1. Select CPUs 0 and 1.
+2. Select all threads that begin with `ssh`.
+3. Move the selected threads to the selected CPUs. Tuna sets the affinity mask of threads starting with `ssh` to the appropriate CPUs. The CPUs can be expressed numerically as 0 and 1, in hex mask as `0x3`, or in binary as `11`.
+4. Reset the CPU list to 2 and 3.
+5. Select all threads that begin with `http`.
+6. Move the selected threads to the selected CPUs. Tuna sets the affinity mask of threads starting with `http` to the appropriate CPUs. The CPUs can be expressed numerically as 2 and 3, in hex mask as `0xC`, or in binary as `1100`.
+
+**查看当前配置**
+
+以下示例使用`--show_threads`（`-P`）参数显示当前配置，然后测试所请求的更改是否按预期进行。
+
+```
+# tuna --threads=gnome-sc\* \
+        --show_threads \
+        --cpus=0 \
+        --move \
+        --show_threads \
+        --cpus=1 \
+        --move \
+        --show_threads \
+        --cpus=+0 \
+        --move \
+        --show_threads
+
+                       thread       ctxt_switches
+     pid SCHED_ rtpri affinity voluntary nonvoluntary             cmd
+   3861   OTHER     0      0,1     33997           58 gnome-screensav
+                       thread       ctxt_switches
+     pid SCHED_ rtpri affinity voluntary nonvoluntary             cmd
+   3861   OTHER     0        0     33997           58 gnome-screensav
+                       thread       ctxt_switches
+     pid SCHED_ rtpri affinity voluntary nonvoluntary             cmd
+   3861   OTHER     0        1     33997           58 gnome-screensav
+                       thread       ctxt_switches
+     pid SCHED_ rtpri affinity voluntary nonvoluntary             cmd
+   3861   OTHER     0      0,1     33997           58 gnome-screensav
+```
+
+The above example command performs the following operations sequentially:
+
+1. Select all threads that begin with `gnome-sc`.
+2. Show the selected threads to enable the user to verify their affinity mask and RT priority.
+3. Select CPU 0.
+4. Move the `gnome-sc` threads to the selected CPU (CPU 0).
+5. Show the result of the move.
+6. Reset the CPU list to CPU 1.
+7. Move the `gnome-sc` threads to the selected CPU (CPU 1).
+8. Show the result of the move.
+9. Add CPU 0 to the CPU list.
+10. Move the `gnome-sc` threads to the selected CPUs (CPUs 0 and 1).
+11. Show the result of the move.
