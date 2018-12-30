@@ -111,3 +111,32 @@ tuna --irqs=128 --cpus=3 --move
 tuna --irqs=128 --show_irqs
 ```
 
+可以比较出更改前后`IRQ`的状态。
+
+## 使用tuna调整任务
+
+要更改线程的策略和优先级信息，使用`--priority`参数：
+
+```bash
+tuna --rhreads=PID_OR_CMD_LIST --priority=[POLICY:]RT_PRIORITY
+```
+
+- *PID_OR_CMD_LIST*是逗号分隔的PID或命令名模式的列表。
+- 对于默认策略，将策略设置为**RR**（roind-robin），**FIFO**（first in ， first out）或者**OTHER**。
+- 将RT_PRIORITY设置为范围1-99。1是最低优先级，99是最高优先级。
+
+
+
+例如：
+
+```bash
+tuna --threads=7861 --priority=RR:40
+```
+
+要验证设置的更改，请在修改`--proprity`之前和之后使用`--show_threads`参数查看：
+
+```bash
+tuna --rhreads=sshd --show_threads --priority=RR:40 --show_threads
+```
+
+这允许比较更改之前和之后所选线程的状态。
