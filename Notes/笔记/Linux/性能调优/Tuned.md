@@ -339,5 +339,3 @@ powertop2tuned NEW_PROFILE_NAME
 tuned-adm profile NEW_PROFILE_NAME
 ```
 
-## 使用tuned和tuned-adm进行性能调优
-
