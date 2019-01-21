@@ -8,7 +8,7 @@ RFS 是默认禁用的。要启用 RFS，用户须编辑两个文件：
 
   设置此文件至同时活跃连接数的最大预期值。对于中等服务器负载，推荐值为 `32768` 。所有输入的值四舍五入至最接近的2的幂。
 
-- `/sys/class/net/*device*/queues/*rx-queue*/rps_flow_cnt`
+- `/sys/class/net/device/queues/rx-queue/rps_flow_cnt`
 
   将 *device* 改为想要配置的网络设备名称（例如，`eth0`），将 *rx-queue* 改为想要配置的接收队列名称（例如，`rx-0`）。将此文件的值设为 `rps_sock_flow_entries` 除以 `N`，其中 `N` 是设备中接收队列的数量。例如，如果 `rps_flow_entries` 设为 `32768`，并且有 16 个配置接收队列，那么 `rps_flow_cnt` 就应设为 `2048`。对于单一队列的设备，`rps_flow_cnt` 的值和 `rps_sock_flow_entries` 的值是一样的。
 
