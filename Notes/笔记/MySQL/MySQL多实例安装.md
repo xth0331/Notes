@@ -100,10 +100,21 @@ mkdir -pv /data{1..4}
 chown -R mysql:mysql /data{1..4}
 ```
 
-接下来，如果已经有数据库二进制文件，可以直接复制mysql库文件到不同实例的数据目录下；如果没有就需要重新初始化各个数据库实例（演示需要，我就直接复制库目录）:
+接下来，如果已经有数据库二进制文件，需要重新初始化各个数据库实例（演示需要，我就直接复制库目录，不建议复制。能启动实例，但后期有问题。）这次直接cp库文件演示一下:
+
+初始化：
 
 ```bash
-echo /data{1..4} | xargs -n 1 cp -rp /data/mysql_data/mysql/
+mysqld --initialize --user=mysql --datadir=/data1
+mysqld --initialize --user=mysql --datadir=/data2
+mysqld --initialize --user=mysql --datadir=/data3
+mysqld --initialize --user=mysql --datadir=/data4
+```
+
+测试需要可以这样操作
+
+```bash
+echo /data{1..4} | xargs -n 1 cp -rp /data/mysql_data/mysql/   # 演示复制mysql库（不建议）
 ```
 
 测试：
