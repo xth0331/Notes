@@ -125,7 +125,13 @@ cp /usr/local/mysql/support-files/mysqld_multi.server /etc/init.d/mysqld_multi
 
 如果部署多实例出现问题，请检查error_log 
 
-连接就不演示了，基于socket的连接或者基于tcp的连接都可以，前提是有这个权限；进入不同的实例。查看对应的变量来确定是否为不同实例。
+基于socket的连接或者基于tcp的连接都可以，前提是有这个权限；进入不同的实例。查看对应的变量来确定是否为不同实例。
+
+```bash
+ mysql -u root -p -S /tmp/mysql.sock2 
+```
+
+查看对应实例的变量：
 
 ```mysql
 show variables like "socket";
