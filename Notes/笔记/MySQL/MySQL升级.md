@@ -9,12 +9,9 @@
 - MySQL安装目录：
   - **MySQL5.6:** /usr/local/mysql-5.6.42-linux-glibc2.12-x86_64
   - **MySQL5.7:**/usr/local/mysql-5.7.24-linux-glibc2.12-x86_64
-- datadir目录：
-  - /data/mysql_data/
+- datadir目录：/data/mysql_data/
 
-
-
-## 升级数据库
+## 升数据库
 
 ```bash
 /etc/init.d/mysqld stop
@@ -26,5 +23,6 @@ chown -R root.mysql .
 cp -r /data/mysql/data/mysql /backup/mydql-5.6.42,backup
 /etc/init.d/mysqld start 
 mysql_upgrade -s 
+
 ```
 
