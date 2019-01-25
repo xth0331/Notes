@@ -116,4 +116,15 @@ mysql --host=remote.example.com --port=3307
 
 
 
-可以指定在建立连接
+可以指定在建立连接时使用的默认值，这样每次调用客户端程序都无需在命令行输入。有以下几种方式：
+
+- 可以在配置文件中`[clietn]`部分指定连接参数。
+
+  ```bash
+  [client]
+  host=host_name
+  user=user_name
+  password=your_pass
+  ```
+
+- 可以使用环境变量指定一些连接参数。
