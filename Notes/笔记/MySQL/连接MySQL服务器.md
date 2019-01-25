@@ -46,5 +46,74 @@ mysql -h localhost -u myname -p mydb
 
 仅使用或检查与所选协议相关的连接选项。其他连接选项将被忽略。例如，`--host=localhost`在Unix上，客户端尝试使用Unix套接字文件连接本地服务器。即使给出了指定端口的选项。
 
+要确保客户端与本地服务器建立`TCP/IP`连接，请使用`--host`或`-h`指定主机名值`127.0.0.1`，或本地服务器的IP地址或名称。也可以指定`localhost`使用`--protocol=TCP`明确指定连接协议：
+
+```bash
+mysql --host=127.0.0.1
+mysql --protocol=TCP
+```
+
+与远程服务器的连接始终使用TCP / IP。使用默认端口号连接到运行的服务器`remote.example.com` （3306）：
+
+```bash
+mysql --host=remote.example.com
+```
+
+指定端口，使用`--port`或`-P`选项：
+
+```bash
+mysql --host=remote.example.com --port=3307
+```
 
 
+
+以下列表总结可用于客户端如何连接到服务器的选项：
+
+- `–default-auth=PLUGIN`
+
+  身份验证插件
+
+- `--host=HOST_NAME`,`-h HOST_NAME`
+
+  指定连接的MySQL服务器，默认`localhost`
+
+- `--password[=PAAS_VAL]`,`-p[PASS_VAL]`
+
+  MySQL账户的密码。密码值可选，但是如果指定，密码值与`-p`之间没有空格。
+
+- `--port=PORT_NUM`,`-P PORT_NUM`
+
+  用于连接的端口号，用于使用TCP/IP建立的连接。默认为`3306`
+
+- `--protocol={TCP|SOCKET|PIPE|MEMORY}`
+
+  指定用于连接服务器的协议
+
+  下表显示了允许的 [`--protocol`](https://dev.mysql.com/doc/refman/5.7/en/connecting.html#option_general_protocol)选项值，并指出了可以使用每个值的平台。值不区分大小写。
+
+  | `--protocol`值 | 连接协议                         | 允许的操作系统 |
+  | -------------- | -------------------------------- | -------------- |
+  | `TCP`          | 到本地或远程服务器的TCP / IP连接 | 所有           |
+  | `SOCKET`       | Unix套接字文件连接到本地服务器   | 仅限Unix       |
+  | `PIPE`         | 与本地或远程服务器的命名管道连接 | 仅限Windows    |
+  | `MEMORY`       | 与本地服务器的共享内存连接       | 仅限Windows    |
+
+- `--socket=FILE_NAME`,`-S FILE_NAME`
+
+  在Unix上，要是用的Unix套接字文件名称，用于连接本地服务器。默认值为`/tmp/mysql.sock`
+
+- `--ssl`
+
+  如果配置了支持SSL，则使用SSL建立与服务器的安全连接
+
+- `--tls-version=PROTOCOL_LIST`
+
+  客户端允许加密连接的协议。值是一个或多个以逗号分隔的协议名称的列表。
+
+- `--user=USER_NAME`,`-u USER_NAME`
+
+  要使用的MySQL的用户名。win上默认为ODBC的，Unix上默认为登录的用户。
+
+
+
+可以指定在建立连接
