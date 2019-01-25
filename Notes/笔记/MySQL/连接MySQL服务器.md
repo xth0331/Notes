@@ -44,5 +44,7 @@ mysql -h localhost -u myname -p mydb
 
 `--protocol`选项可以建立特定类型的连接，即使其他选项通常默认认为某些其他协议。也就是说，`--protocol`可以明确指定连接协议并覆盖前面的规则，即使对于`localhost`。
 
+仅使用或检查与所选协议相关的连接选项。其他连接选项将被忽略。例如，`--host=localhost`在Unix上，客户端尝试使用Unix套接字文件连接本地服务器。即使给出了指定端口的选项。
+
 
 
