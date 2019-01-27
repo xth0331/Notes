@@ -29,4 +29,21 @@ mysqladmin extended-status
 
 
 
-##  
+## MySQL服务器系统变量
+
+MySQL服务器维护许多配置其操作的系统变量。每个系统变量都有一个默认值。可以使用命令行选项或配置文件中的选项在服务启动时设置系统变量。它们中的大多数都是可以在运行时使用`SET`语句动态更改的，这使修改服务器的操作不需重启。还可以在表达式中使用系统变量值。
+
+在运行时，设置全局系统变量值需要`SUPER`权限。设置会话系统变量通常不需要特殊权限，可以由任何用户完成，但也有例外。
+
+- `authentication_windows_log_level`
+
+  | Property                | Value                                |
+  | ----------------------- | ------------------------------------ |
+  | **Command-Line Format** | `--authentication-windows-log-level` |
+  | **System Variable**     | `authentication_windows_log_level`   |
+  | **Scope**               | Global                               |
+  | **Dynamic**             | No                                   |
+  | **Type**                | Integer                              |
+  | **Default Value**       | `2`                                  |
+  | **Minimum Value**       | `0`                                  |
+  | **Maximum Value**       | `4`                                  |
