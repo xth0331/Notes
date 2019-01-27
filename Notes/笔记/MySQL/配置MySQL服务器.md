@@ -37,13 +37,43 @@ MySQL服务器维护许多配置其操作的系统变量。每个系统变量都
 
 - `authentication_windows_log_level`
 
-  | Property                | Value                                |
+  | 属性                | 值                                |
   | ----------------------- | ------------------------------------ |
-  | **Command-Line Format** | `--authentication-windows-log-level` |
-  | **System Variable**     | `authentication_windows_log_level`   |
-  | **Scope**               | Global                               |
-  | **Dynamic**             | No                                   |
-  | **Type**                | Integer                              |
-  | **Default Value**       | `2`                                  |
-  | **Minimum Value**       | `0`                                  |
-  | **Maximum Value**       | `4`                                  |
+  | **命令行格式** | `--authentication-windows-log-level` |
+  | **系统变量**   | `authentication_windows_log_level`   |
+  | **范围**            | Global                               |
+  | **动态修改**         | 不支持                             |
+  | **类型**                | 整数                          |
+  | **默认值**    | `2`                                  |
+  | **最小值**       | `0`                                  |
+  | **最大值**       | `4`                                  |
+
+  当`authentication_windows`启用Windows身份插件并启用调试代码时，此变量才可用。
+
+  此变量设置Windows身份验证插件的日志记录级别。下表显示了允许的值。
+
+  | 值   | 描述                  |
+  | ---- | --------------------- |
+  | 0    | 没有记录              |
+  | 1    | 仅记录错误消息        |
+  | 2    | 记录1级消息和警告消息 |
+  | 3    | 记录2级消息和信息说明 |
+  | 4    | 记录3级消息和调试消息 |
+
+- `authentication_windows_use_principal_name`
+
+  | 属性           | 值                                            |
+  | -------------- | --------------------------------------------- |
+  | **命令行格式** | `--authentication-windows-use-principal-name` |
+  | **系统变量**   | `authentication_windows_use_principal_name`   |
+  | **范围**       | Global                                        |
+  | **动态**       | 不支持                                        |
+  | **类型**       | 布尔                                          |
+  | **默认值**     | `ON`                                          |
+
+  使用InitSecurityContext()函数进行身份验证的客户端应提供表示其连接服务的字符串（**targetName**）。MySQL使用运行服务器的账户的主体名称（UPN）。UPN的格式为`user_id@computer_name`无需在任何地方注册即可使用。
+
+  此变量控制服务器是否在初始质询中发送UPN。默认情况下，该变量已启用。出于安全原因，可以禁用它以避免以明文形式将服务器的帐户名发送给客户端。如果禁用该变量，则服务器始终`0x00`在第一个质询中发送一个 字节，客户端不指定*targetName*，因此使用NTLM身份验证。
+
+  如果服务器无法获取其UPN（主要发生在不支持Kerberos身份验证的环境中），则服务器不会发送UPN并使用NTLM身份验证。
+
