@@ -243,4 +243,245 @@ MySQL服务器维护许多配置其操作的系统变量。每个系统变量都
 
   在将数据添加到非空表时，MyISAM使用特殊的树状缓存来更快地为`INSERT ... SELECT`,`INSERT ... VALUES (...)`和`LOAD DATA`进行批量插入。此变量以每个线程的字节数限制缓存树的大小。将其设置为0将禁用此优化，默认值为8MB。
 
-  
+- `character_set_client`
+
+  | 属性                | 值                  |
+  | ------------------- | ---------------------- |
+  | **系统变量**         | `character_set_client` |
+  | **范围**           | Global, Session        |
+  | **动态**            | 支持                    |
+  | **类型**            | 字符串                 |
+  | **默认值**   | `utf8`                 |
+
+  客户端语句的字符集。当客户端连接到服务器时，使用客户单请求的字符集设置此变量的会话值。（许多客户端支持一个`--default-chaaracter-set`选项，可以明确指定此字符集。）变量的全局用于在客户端请求的情况下设置会话值不可用，或者服务器配置为忽略客户端请求：
+
+  - 客户端请求服务器不知道的字符集。
+  - 客户端来自早于MySQL4.1的版本。
+  - mysqld是使用`--skip-character-set-client-handshake`选项启动的。
+
+- `character_set_connection`
+
+  | 属性         | 值                         |
+  | ------------ | -------------------------- |
+  | **系统变量** | `character_set_connection` |
+  | **范围**     | Global, Session            |
+  | **动态**     | 支持                       |
+  | **类型**     | 字符串                     |
+  | **默认值**   | `utf8`                     |
+
+  用于文字的字符集，没有字符集导入器和数字到字符串转换。
+
+- `character_set_database`
+
+  | 属性         | 值                                                           |
+  | ------------ | ------------------------------------------------------------ |
+  | **系统变量** | `character_set_database`                                     |
+  | **范围**     | Global, Session                                              |
+  | **动态**     | Yes                                                          |
+  | **类型**     | 字符串                                                       |
+  | **默认值**   | `latin1`                                                     |
+  | **备注**     | 此选项是动态的，但只有服务器应设置此信息。您不应手动设置此变量的值 |
+
+  默认数据库使用的字符集。每当默认数据库库更改时，服务器都会设置此变量。如果没有默认数据库。则该变量具有相同的值。
+
+  变量在以后的版本弃用。
+
+  5.7版本中不推荐为此变量赋值。对此变量赋值会产生警告。
+
+- `character_set_filesystem`
+
+  | 属性           | 值                                |
+  | -------------- | --------------------------------- |
+  | **命令行格式** | `--character-set-filesystem=name` |
+  | **系统变量**   | `character_set_filesystem`        |
+  | **范围**       | Global, Session                   |
+  | **动态**       | 支持                               |
+  | **类型**       | 字符串                            |
+  | **默认值**     | `binary`                            |
+
+  文件系统字符集。次变量用于解释引用文件名的字符串文字。例如在`LOAD DATA`和`SELECT ... INTO OUTFILE`语句和 `LOAD_FILE()`函数中。这样的文件名从转换`character_set_client`到`character_set_filesystem`发生文件打开尝试之前。默认值为`binary`表示不进行转换。对于允许使用多字节文件名的系统，不同的值可能更适合。例如，如果系统使用UTF-8，则设置`character_set_filesystem`为`utf8mb4`。
+
+- `character_set_results`
+
+  | 属性         | Value                   |
+  | ------------ | ----------------------- |
+  | **系统变量** | `character_set_results` |
+  | **范围**     | Global, Session         |
+  | **动态**     | 支持                    |
+  | **类型**     | 字符串                  |
+  | **默认值**   | `utf8`                  |
+
+  用于将查询结果返回给客户端的字符集。这包括结果数据，如列值，结果元数据和错误消息。
+
+- `character_set_server`
+
+  | Property       | Value                    |
+  | -------------- | ------------------------ |
+  | **命令行格式** | `--character-set-server` |
+  | **系统变量**   | `character_set_server`   |
+  | **范围**       | Global, Session          |
+  | **动态**       | Yes                      |
+  | **类型**       | String                   |
+  | **默认值**     | `latin1`                 |
+
+  服务器的默认字符集。
+
+- `character_set_system`
+
+  | 属性              | 值                     |
+  | ----------------- | ---------------------- |
+  | **系统变量**      | `character_set_system` |
+  | **范围**          | Global                 |
+  | **动态**          | 不支持                 |
+  | **类型**          | 字符串                 |
+  | **Default Value** | `utf8`                 |
+
+  服务器用于存储标识符的字符集。默认值为 `utf8`.
+
+- `character_sets_dir`
+
+  | 属性           | 值                              |
+  | -------------- | ------------------------------- |
+  | **命令行格式** | `--character-sets-dir=dir_name` |
+  | **系统变量**   | `character_sets_dir`            |
+  | **范围**       | Global                          |
+  | **动态**       | No                              |
+  | **类型**       | 目录名                          |
+
+  字符集的目录
+
+- `check_proxy_users`
+
+  | 属性                | 值                                |
+  | ------------------- | --------------------------------- |
+  | **命令行格式**      | `--check-proxy-users=[={OFF|ON}]` |
+  | **System Variable** | `check_proxy_users`               |
+  | **Scope**           | Global                            |
+  | **Dynamic**         | Yes                               |
+  | **Type**            | Boolean                           |
+  | **Default Value**   | `OFF`                             |
+
+  Some authentication plugins implement proxy user mapping for themselves (for example, the PAM and Windows authentication plugins). Other authentication plugins do not support proxy users by default. Of these, some can request that the MySQL server itself map proxy users according to granted proxy privileges: `mysql_native_password`, `sha256_password`.
+
+  If the [`check_proxy_users`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_check_proxy_users) system variable is enabled, the server performs proxy user mapping for any authentication plugins that make such a request. However, it may also be necessary to enable plugin-specific system variables to take advantage of server proxy user mapping support:
+
+  - For the `mysql_native_password` plugin, enable[`mysql_native_password_proxy_users`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_mysql_native_password_proxy_users).
+  - For the `sha256_password` plugin, enable [`sha256_password_proxy_users`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_sha256_password_proxy_users).
+
+  For information about user proxying, see [Section 6.3.10, “Proxy Users”](https://dev.mysql.com/doc/refman/5.7/en/proxy-users.html).
+
+- [`collation_connection`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_collation_connection)
+
+  | Property            | Value                  |
+  | ------------------- | ---------------------- |
+  | **System Variable** | `collation_connection` |
+  | **Scope**           | Global, Session        |
+  | **Dynamic**         | Yes                    |
+  | **Type**            | String                 |
+
+  The collation of the connection character set. [`collation_connection`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_collation_connection) is important for comparisons of literal strings. For comparisons of strings with column values, [`collation_connection`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_collation_connection) does not matter because columns have their own collation, which has a higher collation precedence (see[Section 10.8.4, “Collation Coercibility in Expressions”](https://dev.mysql.com/doc/refman/5.7/en/charset-collation-coercibility.html)).
+
+- [`collation_database`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_collation_database)
+
+  | Property            | Value                                                        |
+  | ------------------- | ------------------------------------------------------------ |
+  | **System Variable** | `collation_database`                                         |
+  | **Scope**           | Global, Session                                              |
+  | **Dynamic**         | Yes                                                          |
+  | **Type**            | String                                                       |
+  | **Default Value**   | `latin1_swedish_ci`                                          |
+  | **Footnote**        | This option is dynamic, but only the server should set this information. You should not set the value of this variable manually. |
+
+  The collation used by the default database. The server sets this variable whenever the default database changes. If there is no default database, the variable has the same value as [`collation_server`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_collation_server).
+
+  The global [`character_set_database`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_character_set_database) and [`collation_database`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_collation_database) system variables are deprecated in MySQL 5.7 and will be removed in a future version of MySQL.
+
+  Assigning a value to the session [`character_set_database`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_character_set_database) and[`collation_database`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_collation_database) system variables is deprecated in MySQL 5.7 and assignments produce a warning. The session variables will become read only in a future version of MySQL and assignments will produce an error. It will remain possible to access the session variables to determine the database character set and collation for the default database.
+
+- [`collation_server`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_collation_server)
+
+  | Property                | Value                |
+  | ----------------------- | -------------------- |
+  | **Command-Line Format** | `--collation-server` |
+  | **System Variable**     | `collation_server`   |
+  | **Scope**               | Global, Session      |
+  | **Dynamic**             | Yes                  |
+  | **Type**                | String               |
+  | **Default Value**       | `latin1_swedish_ci`  |
+
+  The server's default collation.
+
+- [`completion_type`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_completion_type)
+
+  | Property                | Value                               |
+  | ----------------------- | ----------------------------------- |
+  | **Command-Line Format** | `--completion-type=#`               |
+  | **System Variable**     | `completion_type`                   |
+  | **Scope**               | Global, Session                     |
+  | **Dynamic**             | Yes                                 |
+  | **Type**                | Enumeration                         |
+  | **Default Value**       | `NO_CHAIN`                          |
+  | **Valid Values**        | `NO_CHAIN``CHAIN``RELEASE``0``1``2` |
+
+  The transaction completion type. This variable can take the values shown in the following table. The variable can be assigned using either the name values or corresponding integer values.
+
+  | Value            | Description                                                  |
+  | ---------------- | ------------------------------------------------------------ |
+  | `NO_CHAIN`(or 0) | [`COMMIT`](https://dev.mysql.com/doc/refman/5.7/en/commit.html) and [`ROLLBACK`](https://dev.mysql.com/doc/refman/5.7/en/commit.html) are unaffected. This is the default value. |
+  | `CHAIN` (or 1)   | [`COMMIT`](https://dev.mysql.com/doc/refman/5.7/en/commit.html) and [`ROLLBACK`](https://dev.mysql.com/doc/refman/5.7/en/commit.html) are equivalent to `COMMIT AND CHAIN` and `ROLLBACK AND CHAIN`, respectively. (A new transaction starts immediately with the same isolation level as the just-terminated transaction.) |
+  | `RELEASE`(or 2)  | [`COMMIT`](https://dev.mysql.com/doc/refman/5.7/en/commit.html) and [`ROLLBACK`](https://dev.mysql.com/doc/refman/5.7/en/commit.html) are equivalent to `COMMIT RELEASE` and`ROLLBACK RELEASE`, respectively. (The server disconnects after terminating the transaction.) |
+
+  [`completion_type`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_completion_type) affects transactions that begin with [`START TRANSACTION`](https://dev.mysql.com/doc/refman/5.7/en/commit.html) or[`BEGIN`](https://dev.mysql.com/doc/refman/5.7/en/commit.html) and end with [`COMMIT`](https://dev.mysql.com/doc/refman/5.7/en/commit.html) or [`ROLLBACK`](https://dev.mysql.com/doc/refman/5.7/en/commit.html). It does not apply to implicit commits resulting from execution of the statements listed in [Section 13.3.3, “Statements That Cause an Implicit Commit”](https://dev.mysql.com/doc/refman/5.7/en/implicit-commit.html). It also does not apply for [`XA COMMIT`](https://dev.mysql.com/doc/refman/5.7/en/xa-statements.html), [`XA ROLLBACK`](https://dev.mysql.com/doc/refman/5.7/en/xa-statements.html), or when [`autocommit=1`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_autocommit).
+
+- [`concurrent_insert`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_concurrent_insert)
+
+  | Property                | Value                          |
+  | ----------------------- | ------------------------------ |
+  | **Command-Line Format** | `--concurrent-insert[=#]`      |
+  | **System Variable**     | `concurrent_insert`            |
+  | **Scope**               | Global                         |
+  | **Dynamic**             | Yes                            |
+  | **Type**                | Enumeration                    |
+  | **Default Value**       | `AUTO`                         |
+  | **Valid Values**        | `NEVER``AUTO``ALWAYS``0``1``2` |
+
+  If `AUTO` (the default), MySQL permits [`INSERT`](https://dev.mysql.com/doc/refman/5.7/en/insert.html) and [`SELECT`](https://dev.mysql.com/doc/refman/5.7/en/select.html) statements to run concurrently for `MyISAM` tables that have no free blocks in the middle of the data file. If you start [**mysqld**](https://dev.mysql.com/doc/refman/5.7/en/mysqld.html) with [`--skip-new`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_new), this variable is set to `NEVER`.
+
+  This variable can take the values shown in the following table. The variable can be assigned using either the name values or corresponding integer values.
+
+  | Value          | Description                                                  |
+  | -------------- | ------------------------------------------------------------ |
+  | `NEVER`(or 0)  | Disables concurrent inserts                                  |
+  | `AUTO` (or 1)  | (Default) Enables concurrent insert for `MyISAM` tables that do not have holes |
+  | `ALWAYS`(or 2) | Enables concurrent inserts for all `MyISAM` tables, even those that have holes. For a table with a hole, new rows are inserted at the end of the table if it is in use by another thread. Otherwise, MySQL acquires a normal write lock and inserts the row into the hole. |
+
+  See also [Section 8.11.3, “Concurrent Inserts”](https://dev.mysql.com/doc/refman/5.7/en/concurrent-inserts.html).
+
+- [`connect_timeout`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_connect_timeout)
+
+  | Property                | Value                 |
+  | ----------------------- | --------------------- |
+  | **Command-Line Format** | `--connect-timeout=#` |
+  | **System Variable**     | `connect_timeout`     |
+  | **Scope**               | Global                |
+  | **Dynamic**             | Yes                   |
+  | **Type**                | Integer               |
+  | **Default Value**       | `10`                  |
+  | **Minimum Value**       | `2`                   |
+  | **Maximum Value**       | `31536000`            |
+
+  The number of seconds that the [**mysqld**](https://dev.mysql.com/doc/refman/5.7/en/mysqld.html) server waits for a connect packet before responding with `Bad handshake`. The default value is 10 seconds.
+
+  Increasing the [`connect_timeout`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_connect_timeout) value might help if clients frequently encounter errors of the form `Lost connection to MySQL server at '*XXX*', system error: *errno*`.
+
+- [`core_file`](https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_core_file)
+
+  | Property            | Value       |
+  | ------------------- | ----------- |
+  | **System Variable** | `core_file` |
+  | **Scope**           | Global      |
+  | **Dynamic**         | No          |
+  | **Type**            | Boolean     |
+  | **Default Value**   | `OFF`       |
+
+  Whether to write a core file if the server crashes. This variable is set by the [`--core-file`](https://dev.mysql.com/doc/refman/5.7/en/server-options.html#option_mysqld_core-file) option.
