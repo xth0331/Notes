@@ -550,3 +550,63 @@ MySQL服务器维护许多配置其操作的系统变量。每个系统变量都
   | **默认值**     | `mysql_native_password`                       |
   | **有效值**     | `mysql_native_password``sha256_password`      |
 
+  默认的身份验证插件。允许使用这些：
+
+  - `mysql_native_password`:使用本地MySQL密码；
+  - `sha256_password`：使用`SHA-256`密码；
+
+  > 如果此变量的值不是`mysql_native_password`，则5.5.7之前版本的客户端无法连接。
+
+  `default_authentication_plugin`的值会影响这些方面：
+
+  - 它确定服务器为`CREATE USER`创建的新账户分配哪个身份验证插件，以及未明确指定身份验证插件的`GRANT`语句。
+
+  - `old_passwords`系统变量影响使用`mysql_native_password`或`sha256_password`身份验证插件的账户的密码哈希。如果默认身份验证插件是其中一个。则服务器会在启动时将`old_passwords`设置为插件密码哈希方法所需的值。
+
+  - 对于使用以下任一语句创建的账户，服务器将该账户与默认身份验证插件关联，并为该账户分配密码，根据插件的要求进行哈希处理。 
+
+    ```mysql
+    CREATE USER ... IDENTIFIED BY 'cleartext password';
+    GRANT ... IDENTIFIED BY 'cleartext password';
+    ```
+
+  - 对于使用以下任一语句创建的用户，如果密码哈希具有插件所需的格式，则服务器会将该账户与默认身份验证插件相关联，并为该账户分配给定的密码哈希值。
+
+    ```mysql
+    CREATE USER ... IDENTIFIED BY PASSWORD 'encrypted password';
+    GRANT ... IDENTIFIED BY PASSWORD 'encrypted password';
+    ```
+
+    如果密码哈希值不是默认身份验证插件所需的格式，则该语句失败。
+
+  - `default_password_life_time`
+
+    | 属性                     | 值                              |
+    | ------------------------ | ------------------------------- |
+    | **命令行格式**           | `--default-password-lifetime=#` |
+    | **系统变量**             | `default_password_lifetime`     |
+    | **范围**                 | Global                            |
+    | **动态**                 | 支持                              |
+    | **类型**                 | 整数                            |
+    | **默认值**（> = 5.7.11） | `0`                             |
+    | **默认值**（<= 5.7.10）  | `360`                           |
+    | **最小值**           | `0`                             |
+    | **最大值**             | `65535`                         |
+
+    此变量定义全局自动密码到期策略。默认值为`0`，禁用密码自动到期。如果值为正整数N，则表示允许的密码生存期；密码必须每N天更改一次。
+
+    可以使用`ALTER USER`语句的密码到期选项根据需要覆盖全局密码到期策略。
+
+    > 从MySQL 5.7.4到5.7.10，默认`default_password_lifetime` 值为360（密码每年大约必须更改一次）。对于这些版本，请注意，如果您不对`default_password_lifetime` 变量或单个用户帐户进行任何更改 ，则所有用户密码将在360天后过期，并且所有用户帐户将在发生这种情况时开始以受限模式运行。连接到服务器的客户端（实际上是用户）将收到错误，指示必须更改密码： `ERROR 1820 (HY000): You must reset your password using ALTER USER statement before executing this statement.`
+    >
+    > 但是，对于自动连接到服务器的客户端（例如通过脚本建立的连接），很容易错过。为避免此类客户端因密码过期而突然停止工作，请确保更改这些客户端的密码过期设置，如下所示：
+    >
+    > ```mysql
+    > ALTER USER 'script'@'localhost' PASSWORD EXPIRE NEVER
+    > ```
+    >
+    > 或者，将`default_password_lifetime` 变量设置 为`0`，从而禁用所有用户的自动密码到期。
+
+  - `default_storage_engine`
+
+    
