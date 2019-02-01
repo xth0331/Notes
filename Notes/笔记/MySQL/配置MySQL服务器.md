@@ -626,3 +626,55 @@ MySQL服务器维护许多配置其操作的系统变量。每个系统变量都
 
     如果服务器启动时禁用某些存储引擎，则必须将`permanent`和`TEMPORARY`表的默认引擎设置为其他引擎，否则服务器将无法启动。
 
+  - `default_tmp_storage_engine`
+
+    | 属性           | 值                                  |
+    | -------------- | ----------------------------------- |
+    | **命令行格式** | `--default-tmp-storage-engine=name` |
+    | **系统变量**   | `default_tmp_storage_engine`        |
+    | **范围**       | Global，Session                     |
+    | **动态**       | 支持                                |
+    | **类型**       | Enumeration                         |
+    | **默认值**     | `InnoDB`                            |
+
+    `TEMPORARY`表的默认存储引擎（使用`CREATE_TEMPORARY_TABLE`）创建。要为永久表设置存储引擎，请设置`default_storage_engine`系统变量。
+
+    如果在服务器启动时禁用默认存储引擎，则必须将永久引擎和`TEMPORARY`表的默认引擎设置为其他引擎。否则服务器将无法启动。
+
+  - `default_week_format`
+
+    | 属性           | 值                        |
+    | -------------- | ------------------------- |
+    | **命令行格式** | `--default-week-format=#` |
+    | **系统变量**   | `default_week_format`     |
+    | **范围**       | Global，Session           |
+    | **动态**       | 支持                      |
+    | **类型**       | 整数                      |
+    | **默认值**     | `0`                       |
+    | **最小值**     | `0`                       |
+    | **最大值**     | `7`                       |
+
+    用于`WEEK()`功能的默认模式值。
+
+  - `delay_key_write`
+
+    | 属性           | 值                         |
+    | -------------- | -------------------------- |
+    | **命令行格式** | `--delay-key-write[=name]` |
+    | **系统变量**   | `delay_key_write`          |
+    | **范围**       | Global                     |
+    | **动态**       | 支持                       |
+    | **类型**       | Enumeration                |
+    | **默认值**     | `ON`                       |
+    | **有效值**     | `ON``OFF``ALL`             |
+
+    此选项仅适用于`MyISAM`表。而异具有以下值之一，以影响`DELAY_KEY_WRITE`可以在`CREATE TABLE`语句中使用的表选项的处理。
+
+    | 选项  | 描述                                                         |
+    | ----- | ------------------------------------------------------------ |
+    | `OFF` | `DELAY_KEY_WRITE` 被忽略了。                                 |
+    | `ON`  | MySQL尊重语句中`DELAY_KEY_WRITE`指定的任何选项 `CREATE TABLE`。这是默认值。 |
+    | `ALL` | 所有新打开的表都被视为已`DELAY_KEY_WRITE`启用选项创建 。     |
+
+    如果`DELAY_KEY_WRITE`为表启用了。则不会再每次索引更新时为表刷新密钥缓冲区，但尽在表关闭时才刷新。这会大大加快对密钥的写入速度，但是如果使用此功能，则应通过使用`--myisam-recover-option`选项启动服务器来添加所有表的自动检查。
+
