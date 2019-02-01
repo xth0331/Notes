@@ -609,4 +609,20 @@ MySQL服务器维护许多配置其操作的系统变量。每个系统变量都
 
   - `default_storage_engine`
 
-    
+    | 属性           | 值                              |
+    | -------------- | ------------------------------- |
+    | **命令行格式** | `--default-storage-engine=name` |
+    | **系统变量**   | `default_storage_engine`        |
+    | **范围**       | 全球，会议                      |
+    | **动态**       | 支持                            |
+    | **类型**       | Enumeration                     |
+    | **默认值**     | `InnoDB`                        |
+
+    默认存储引擎，此变量仅为永久表设置存储引擎，要为`TEMPORARY`表设置存储引擎，请设置`default_tmp_storage_engine`系统变量。
+
+    要查看哪些存储引擎可用并以启用，使用`SHOW ENGINES`语句或查询`INFORMATION_SCHEMA`的`ENGINES`表。
+
+    `default_storage_engine`应优先于`storage_engine`使用，不推荐，并在5.7.5中删除。
+
+    如果服务器启动时禁用某些存储引擎，则必须将`permanent`和`TEMPORARY`表的默认引擎设置为其他引擎，否则服务器将无法启动。
+
