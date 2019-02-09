@@ -24,7 +24,16 @@ Master服务器上的组件，用于监控未创建节点和新创建的Pod，�
 
 ### kube-controller-manager
 
+运行控制器的Master服务器上的组件。
 
+逻辑上，每个控制器是一个单独的过程，但为了降低复杂性骂他们都被编译称为单个二进制文件并在单个进程中运行。
+
+这些控制器包括：
+
+-  Node Controller:
+- Replication Controller:
+- Endporints Controller:
+- Service Account & Token Controllers:
 
 ### cloud-controller-manager
 
