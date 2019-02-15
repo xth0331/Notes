@@ -53,7 +53,28 @@ kube-system        Active   126d
 
 ### 指定namespaces
 
+要临时设置请求的命名空间，请使用 `--namespace`
+
+For example:
+
+```shell
+kubectl --namespace=<insert-namespace-name-here> run nginx --image=nginx
+kubectl --namespace=<insert-namespace-name-here> get pods
+```
+
+### 设置namspaces首选项
+
+可以在该上下文中为所有后续kubectl命令永久保存命名空间.
+
+```shell
+kubectl config set-context $(kubectl config current-context) --namespace=<insert-namespace-name-here>
+kubectl config view | grep namespace:
+```
 
 
 
+## Namespaces和DNS
 
+创建`service`时，它会创建相应的DNS条目。条目是`<service-name>.<namespace-name>.svc.cluster.local`，这意味着如果容器只是使用`<service-name>`，它将解析为`namespace`本地的服务。这对于在多个名称空间（如开发，分段和生产）中使用相同的配置非常有用。如果要跨命名空间访问，则需要使用完全限定的域名（FQDN）。
+
+## 
