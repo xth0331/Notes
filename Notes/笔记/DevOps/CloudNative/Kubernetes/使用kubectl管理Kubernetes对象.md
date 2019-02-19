@@ -136,5 +136,33 @@ kubectl apply -R -f configs/
 
 
 
+## 使用命令管理Kubernetes对象
 
+使用`kubectl`命令行工具中内置的命令可以快速创建，更新和删除Kubernetes对象。
 
+### 如何创建对象
+
+`kubectl`工具支持动词驱动的命令，用户创建一些最常见的对象类型。
+
+- `run`： 创建一个新的`deployment`对象以在一个或多个`pod`中运行容器。
+- `expose` : 创建一个新的`service`对象，以便在`pod`之间对流量进行负载均衡。
+- `autoscale`：创建新的`autoscaler`对象以自动水平拓展控制器，例如`deployment`。
+
+`kubectl `工具还支持由对象类型驱动的命令。
+
+`create <objecttype> [<subtype>] <instancename>`
+
+某些对象类型具有子类型，可在`create`命令中指定。例如，`service`对象有几个子类型，包括`ClusterIP`,`LoadBalance`和`NodePort`。这是一个使用子类型`NodePort`创建`service`的示例：
+
+```shell
+kubectl create service nodeport <myservicename>
+```
+
+在前面的例子中，`create service nodeport`命令被称为`create service`的子命令。
+
+ ### 如何更新对象
+
+`kubectl `支持一些常见更新操作的动词驱动命令。
+
+- `scale`：通过更新控制器的副本数，水平缩放控制器以添加或删除`pod`。
+- `annotate`： 
