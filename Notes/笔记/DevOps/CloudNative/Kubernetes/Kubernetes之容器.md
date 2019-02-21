@@ -23,3 +23,23 @@
 
 ## 容器环境变量
 
+### 容器环境
+
+Kubernetes Container环境为容器提供了几个重要资源：
+
+- 文件系统，是image和一个或多个卷的组合。
+- 有关Container本身的信息。
+- 有关集群中其他对象的信息。
+
+#### 容器信息
+
+Container的主机名是运行Container的Pod的名称。它可以通过`hostname`命令或`libc`中的`gethostname`函数调用获得。
+
+Pod名称和Namespace可通过`download API`作为环境变量使用。
+
+Pod定义中的用户定义环境变量也可用于容器，Docker镜像中静态指定的任何环境变量也是如此。
+
+#### 集群信息
+
+创建容器是运行的所有服务的列表可作为环境变量用于该容器，这些环境变量与`docker line`的语法相匹配。
+
