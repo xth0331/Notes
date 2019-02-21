@@ -15,4 +15,11 @@
 - 将容器的`imagePullPolicy`设置为`Always`。
 - 省略`imagePullPolicy`并使用`:latest`作为图像的标记（tag）。
 - 省略`imagePullPolicy`和要使用的镜像标记。
+- 启用`AlwaysPullimages`准入控制器。
+
+> 注意，应该避免使用`:latest`tag。
+
+
+
+## 容器环境变量
 
