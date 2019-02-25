@@ -390,99 +390,45 @@ spec:
     name: liveness
 ```
 
-### 示例状态
+#### 示例状态
 
-- Pod正在运行并有一个Container。集装箱出口成功。
-
+- Pod正在运行并有一个Container。容器退出成功。
   - 记录完成事件。
-
-  - 如果
-
-    ```
-    restartPolicy
-    ```
-
-    是：
-
-    - 始终：重启容器; Pod `phase`保持运行状态。
+  - 如果`restartPolicy`是：
+    - Always：重启容器; Pod `phase`保持运行状态。
     - OnFailure：Pod `phase`成功。
-    - 从不：Pod `phase`成功。
-
+    - Never：Pod `phase`成功。
 - Pod正在运行并有一个Container。容器退出失败。
-
   - 记录失败事件。
-
-  - 如果
-
-    ```
-    restartPolicy
-    ```
-
-    是：
-
-    - 始终：重启容器; Pod `phase`保持运行状态。
+  - 如果`restartPolicy`是：
+    - Always：重启容器; Pod `phase`保持运行状态。
     - OnFailure：重启容器; Pod `phase`保持运行状态。
-    - 从不：Pod `phase`变得失败。
-
+    - Never：Pod `phase`变为失败。
 - Pod正在运行并有两个容器。容器1出现故障。
-
   - 记录失败事件。
-
-  - 如果
-
-    ```
-    restartPolicy
-    ```
-
-    是：
-
-    - 始终：重启容器; Pod `phase`保持运行状态。
+  - 如果`restartPolicy`是：
+    - Always：重启容器; Pod `phase`保持运行状态。
     - OnFailure：重启容器; Pod `phase`保持运行状态。
-    - 从不：不要重启容器; Pod `phase`保持运行状态。
-
+    - Never：不要重启容器; Pod `phase`保持运行状态。
   - 如果Container 1未运行，并且Container 2退出：
-
     - 记录失败事件。
-
-    - 如果
-
-      ```
-      restartPolicy
-      ```
-
-      是：
-
-      - 始终：重启容器; Pod `phase`保持运行状态。
+    - 如果`restartPolicy`是：
+      - Always：重启容器; Pod `phase`保持运行状态。
       - OnFailure：重启容器; Pod `phase`保持运行状态。
-      - 从不：Pod `phase`变得失败。
-
+      - Never：Pod `phase`变得失败。
 - Pod正在运行并有一个Container。容器耗尽内存。
-
   - 容器终止失败。
-
   - 记录OOM事件。
-
-  - 如果
-
-    ```
-    restartPolicy
-    ```
-
-    是：
-
-    - 始终：重启容器; Pod `phase`保持运行状态。
+  - 如果`restartPolicy`是：
+    - Always：重启容器; Pod `phase`保持运行状态。
     - OnFailure：重启容器; Pod `phase`保持运行状态。
-    - 从不：记录失败事件; Pod `phase`变得失败。
-
+    - Never：记录失败事件; Pod `phase`变得失败。
 - Pod正在运行，磁盘已经死亡。
-
   - 杀死所有容器。
   - 记录适当的事件。
   - Pod `phase`变得失败。
   - 如果在控制器下运行，Pod将在其他位置重新创建。
-
 - Pod正在运行，其节点已分段。
-
   - 节点控制器等待超时。
   - 节点控制器将Pod设置`phase`为Failed。
   - 如果在控制器下运行，Pod将在其他位置重新创建。
