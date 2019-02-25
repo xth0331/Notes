@@ -265,6 +265,6 @@ Pod有一个PodStatus，它有一个PodConditions数组。PodCondition数组的�
 
 ### 容器状态
 
-
+一旦Pod被调度程序分配给节点，`kubelet`就开始使用容器运行时创建容器。
 
  
