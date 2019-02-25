@@ -265,6 +265,224 @@ Pod有一个PodStatus，它有一个PodConditions数组。PodCondition数组的�
 
 ### 容器状态
 
-一旦Pod被调度程序分配给节点，`kubelet`就开始使用容器运行时创建容器。
+一旦Pod被调度程序分配给节点，`kubelet`就开始使用容器运行时创建容器。容器由三种可能的状态：等待，运行和终止。要检查容器的状态，可以使用`kubectl describe pod [POD_NAME]`。显示Pod中每个容器的状态。
 
- 
+- `Waiting`：容器的默认状态。如果容器未处于`Running`或`Terminated`状态，则它处于`Waiting`状态。处于`Waiting`的容器仍然运行其所需的操作，如拉取镜像，应用`Secrets`等。随着此状态，将显示有关状态的消息和原因（`Reason`）以提供更多信息。
+
+  ```yaml
+  ...
+    State:          Waiting
+     Reason:       ErrImagePull
+    ...
+  ```
+
+  
+
+- `Running`：指出容器正在执行而没有问题。一旦容器进入`Running`状态，就会执行`postStart`钩子（如果有）。 
+
+  ```yaml
+     ...
+        State:          Running
+         Started:      Wed, 30 Jan 2019 16:46:38 +0530
+     ...
+  ```
+
+- `Terminated`：表示容器已经完成执行并已停止运行。容器在成功完成执行或由于某种原因失败时进入此容器。无论如何，会显示原因和退出代码，以及容器的开始和结束时间。在容器进入`Terminated`之前，执行`preStop`钩子（如果有）。
+
+  ```yaml
+     ...
+        State:          Terminated
+          Reason:       Completed
+          Exit Code:    0
+          Started:      Wed, 30 Jan 2019 11:45:26 +0530
+          Finished:     Wed, 30 Jan 2019 11:45:26 +0530
+      ...
+  ```
+
+
+
+### Pod readiness gate
+
+为了通过注入额外的反馈或信号来增加Pod准备的可扩展性`PodStatus`，Kubernetes 1.11引入了一个名为Pod ready ++的功能。您可以使用新的字段`ReadinessGate`中`PodSpec`指定波德准备进行评估附加条件。如果Kubernetes在`status.conditions`Pod 的字段中找不到这样的条件，则条件的状态默认为“ `False`”。以下是一个例子：
+
+```yaml
+Kind: Pod
+...
+spec:
+  readinessGates:
+    - conditionType: "www.example.com/feature-1"
+status:
+  conditions:
+    - type: Ready  # this is a builtin PodCondition
+      status: "True"
+      lastProbeTime: null
+      lastTransitionTime: 2018-01-01T00:00:00Z
+    - type: "www.example.com/feature-1"   # an extra PodCondition
+      status: "False"
+      lastProbeTime: null
+      lastTransitionTime: 2018-01-01T00:00:00Z
+  containerStatuses:
+    - containerID: docker://abcd...
+      ready: true
+...
+```
+
+新Pod条件必须符合Kubernetes标签密钥格式。由于该`kubectl patch`命令仍然不支持修补对象状态，因此必须`PATCH`使用其中一个KubeClient库通过操作注入新的Pod条件。
+
+随着新Pod条件的引入，**只有** 当以下两个语句都成立时，**才会**评估Pod是否就绪：
+
+- Pod中的所有容器都已准备就绪。
+- 指定的所有条件`ReadinessGates`均为“ `True`”。
+
+为了便于对Pod准备评估进行此更改，`ContainersReady`引入了一个新的Pod条件 来捕获旧的Pod `Ready`条件。
+
+### 重启策略
+
+Pod Spec有一个`restartPolicy`字段，可能包含`Always`，`OnFailure`和`Never`。默认值为`Always`。`restartPolicy`适用于Pod中的所有容器。`restartPolicy`仅指同一节点上的`kubelet`重新启动容器。由`kubelet`重新启动的一退出容器将以指数回退延迟重新启动，上限五分钟，并在成功执行十分钟后重置。一旦绑定到节点，Pod永远不会弹回到其他节点。
+
+
+
+### Pod 寿命
+
+一般来说，Pod不会消失，直到有人删除它们。这可能是人或控制器。此规则的唯一例外是，具有成功或失败超过一段时间的阶段的Pod将过期并自动删除。
+
+有三种类型的控制器可供选择：
+
+- 使用Job for Pod预期终止，例如，批量计算。Job仅适用于`restartPolicy`为`OnFailure`或`Never`的Pod。
+- 对不希望终止的Pod（例如web服务器）使用`ReplicationController`，`ReplicaSet`或`Deployment`。`ReplicationController`仅适用于`restartPolicy`为`Always`的Pod。
+- 使用需要为每台计算机运行一个Pod的`DeamonSet`，因为他们提供特定于计算机的系统服务。
+
+三种类型的控制器都包含`PodTemplate`。建议创建适当的控制器并让他们创建Pod，而不是直接创建Pod。这是因为单独的Pod不能容忍机器故障，但控制器可以。
+
+如果节点死亡或与集群指定其他部分断开连接，Kubernetes会应用策略将死亡的节点上的所有Pod的`phase`设置为`Failed`。、
+
+### 例子
+
+#### 高级活动探测示例
+
+活动探测由kubelet执行，因此所有请求都在kubelet网络名称空间中进行。
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    test: liveness
+  name: liveness-http
+spec:
+  containers:
+  - args:
+    - /server
+    image: k8s.gcr.io/liveness
+    livenessProbe:
+      httpGet:
+        # when "host" is not defined, "PodIP" will be used
+        # host: my-host
+        # when "scheme" is not defined, "HTTP" scheme will be used. Only "HTTP" and "HTTPS" are allowed
+        # scheme: HTTPS
+        path: /healthz
+        port: 8080
+        httpHeaders:
+        - name: X-Custom-Header
+          value: Awesome
+      initialDelaySeconds: 15
+      timeoutSeconds: 1
+    name: liveness
+```
+
+### 示例状态
+
+- Pod正在运行并有一个Container。集装箱出口成功。
+
+  - 记录完成事件。
+
+  - 如果
+
+    ```
+    restartPolicy
+    ```
+
+    是：
+
+    - 始终：重启容器; Pod `phase`保持运行状态。
+    - OnFailure：Pod `phase`成功。
+    - 从不：Pod `phase`成功。
+
+- Pod正在运行并有一个Container。容器退出失败。
+
+  - 记录失败事件。
+
+  - 如果
+
+    ```
+    restartPolicy
+    ```
+
+    是：
+
+    - 始终：重启容器; Pod `phase`保持运行状态。
+    - OnFailure：重启容器; Pod `phase`保持运行状态。
+    - 从不：Pod `phase`变得失败。
+
+- Pod正在运行并有两个容器。容器1出现故障。
+
+  - 记录失败事件。
+
+  - 如果
+
+    ```
+    restartPolicy
+    ```
+
+    是：
+
+    - 始终：重启容器; Pod `phase`保持运行状态。
+    - OnFailure：重启容器; Pod `phase`保持运行状态。
+    - 从不：不要重启容器; Pod `phase`保持运行状态。
+
+  - 如果Container 1未运行，并且Container 2退出：
+
+    - 记录失败事件。
+
+    - 如果
+
+      ```
+      restartPolicy
+      ```
+
+      是：
+
+      - 始终：重启容器; Pod `phase`保持运行状态。
+      - OnFailure：重启容器; Pod `phase`保持运行状态。
+      - 从不：Pod `phase`变得失败。
+
+- Pod正在运行并有一个Container。容器耗尽内存。
+
+  - 容器终止失败。
+
+  - 记录OOM事件。
+
+  - 如果
+
+    ```
+    restartPolicy
+    ```
+
+    是：
+
+    - 始终：重启容器; Pod `phase`保持运行状态。
+    - OnFailure：重启容器; Pod `phase`保持运行状态。
+    - 从不：记录失败事件; Pod `phase`变得失败。
+
+- Pod正在运行，磁盘已经死亡。
+
+  - 杀死所有容器。
+  - 记录适当的事件。
+  - Pod `phase`变得失败。
+  - 如果在控制器下运行，Pod将在其他位置重新创建。
+
+- Pod正在运行，其节点已分段。
+
+  - 节点控制器等待超时。
+  - 节点控制器将Pod设置`phase`为Failed。
+  - 如果在控制器下运行，Pod将在其他位置重新创建。
