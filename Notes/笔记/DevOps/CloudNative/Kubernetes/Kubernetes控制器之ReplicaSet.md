@@ -210,5 +210,9 @@ kubectl autoscale rs frontend --max=10
 
 #### DeamonSet
 
+使用`DaemonSet`代替提供机器级功能的Pod的`ReplicaSet`，例如机器监控或日志记录。这些Pod的生命周期与机器的生命周期有关：Pod需要在其他Pod启动之前在机器上运行，并且当机器准备好重新启动/关闭时可以安全终止。
 
+#### ReplicationController
+
+`ReplicaSet`是`ReplicationController`的后续版本。这两个用途相同，行为相似，只是`ReplicationController`不支持标签用户指南中的基于集合的选择器需求。因此`ReplicaSet`优先于`ReplicationController`。
 
