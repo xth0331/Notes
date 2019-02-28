@@ -97,3 +97,118 @@ spec:
 
 ### 编写ReplicaSet
 
+和所有其他KubernetesAPI对象一样，`ReplicaSet`需要`apiVersion`，`kind`和`metadata`字段。对于`ReplicaSet`，`kind`只有`ReplicaSet`。在Kubernetes1.9版本中，`ReplicaSet`类型的`apiVersion`是`apps/v1`默认情况下启用。`apps/v1beta2`已弃用。
+
+#### Pod Template
+
+`.spec.template`是一个Pod模板，也需要`labels`（标签）。例如，`tier: frontend`。注意不要与其他控制器的选择器重叠，一面他们尝试选择这个Pod。
+
+对于`template`的重启策略字段，`。spec.template.spec.restartPolicy`，唯一允许的值是`Always`，这是默认值。
+
+#### Pod Selector
+
+`.spec.selector`字段是标签选择器。如前所述，这些是用于识别可能获得潜在Pod的标签。例如：
+
+```yaml
+matchLabels:
+	tier: frontend
+```
+
+在`ReplicaSet`中，`.spec.template.metadata.labels`必须与`spec.selector`匹配，否则将被API拒绝。
+
+> 对于指定相同`.spec.selector`字段和不同的`.spec.template.metadata.labels`和`.spec.template.spec`字段的两个`ReplicaSet`，每个`ReplicaSet`都会忽略其他`ReplicaSet`创建的Pod。
+
+#### Replicas
+
+可以通过设置`.spec.replicas`来指定应同时运行的Pod数量。`ReplicaSet`将创建/删除其Pod以匹配此数值。
+
+如果没定义`.spec.replicas`，那么默认为1。
+
+### 使用ReplicaSets
+
+#### 删除  ReplicaSet及其Pod
+
+要删除`ReplicaSet`及其所有Pod，使用`kubectl delete`。垃圾收集器默认自动删除所有Pod。
+
+使用REST API 或`client-go`时，必须在`-d`选项中将`propagationPolicy`设置为`Background`或`Foreground`。例如：
+
+```bash
+kubectl proxy --port=8000
+curl -X DELETE 'localhost:8080/apis/extensions/v1beta1/namespaces/default/replicasets/frontend' \
+-d '{"kind": "DeleteOptions","apiVersion"："v1","propagationPolicy":"Foreground"}' \
+-H "Content-Type: application/json"
+```
+
+#### 仅删除 ReplicaSet
+
+可以使用带有`--cascade=false`选项的`kubectl delete`删除`ReplicaSet`而不影响Pod。
+
+使用REST API 或`client-go`时，必须在`-d`选项中将`propagationPolicy`设置为`Orphan`。例如：
+
+```bash
+kubectl proxy --port=8080
+curl -X DELETE  'localhost:8080/apis/extensions/v1beta1/namespaces/default/replicasets/frontend' \
+ -d '{"kind":"DeleteOptions","apiVersion":"v1","propagationPolicy":"Orphan"}' \
+ -H "Content-Type: application/json"
+```
+
+> 删除原始文件后，可以创建一个新的`ReplicaSet`来替换它。只要就得和新的`.spec.selector`相同，那么将采用旧的Pod。但是，它不会任何使现有的Pod匹配一个新的，不通的模板。要以受控方式将Pod更新为新的规范，使用滚动更新。
+
+#### 从ReplicaSet中删除Pod
+
+可以通过更改标签来从`ReplicaSet`中删除Pod。此技术可用于从服务中删除Pod以进行调试，数据恢复等。以这种方式删除的Pod将自动替换（假设副本数量也未更改）。
+
+#### 伸缩ReplicaSet
+
+只需要更新`.spec.replicas`字段即可轻松扩展或缩小`ReplicaSet`。`ReplicaSet`控制器确保具有匹配标签选择器的所需数量的Pod可用且可操作。
+
+#### ReplicaSet as a Horizontal Pod Autoscaler Target
+
+`ReplicaSet`可以是`HPA`的目标。也就是说，HPA可以自动伸缩`ReplicaSet`。以下是针对我们在上一个实例中创建的`ReplicaSet`的HPA示例：
+
+**hpa-rs.yaml:**
+
+```yaml
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: frontend-scaler
+spec:
+  scaleTargetRef:
+    kind: ReplicaSet
+    name: frontend
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 50
+```
+
+将`hpa-rs.yaml`提交给Kubernetes集群，将会创建HPA，HPA根据`ReplicaSet`的Pod的CPU使用情况自动调整目标。
+
+```bash
+kubectl create -f hpa-re.yaml
+```
+
+另外，可以使用`kubectl autoscale`命令完成相同的操作：
+
+```bash
+kubectl autoscale rs frontend --max=10
+```
+
+### ReplicaSet的替代品
+
+#### Deployment (推荐)
+
+`Deployment`是一个对象，可以拥有`ReplicaSet`并通过声明式的服务端滚动更新来更新它们及其Pod。虽然`ReplicaSet`可以独立使用，但是主要被`Deployment`用作协调Pod创建，删除，更新的机制。使用`Deployment`时，不必担心管理他们创建的`ReplicaSet`。`Deployment`拥有并管理其`ReplicaSet`。因此，建议在需要`ReplicaSet`时，使用`Deployment`。
+
+#### Bare Pod
+
+与用户直接创建Pod不通，`ReplicaSet`会替换因任何原因而被删除或终止的Pod，例如在节点故障或维护的情况下，例如内核升级。因此，即使应用只需要一个Pod，也建议使用`ReplicaSet`。可以想想它与流程主管类似，只是它监控多个节点上的多个Pod，而不是单个节点上的单个进程。`ReplicaSet`将本地容器重新启动委派给节点上的某个代理程序，例如`Kubelet`或`Docker`。
+
+#### Job
+
+对于预期会自行终止的Pod（批处理作业），使用`Job`而不是`ReplicaSet`。
+
+#### DeamonSet
+
+
+
