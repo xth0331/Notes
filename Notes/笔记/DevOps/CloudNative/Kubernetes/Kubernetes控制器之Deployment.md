@@ -93,3 +93,19 @@ Waiting for rollout to finish: 2 out of 3 new replicas have been updated...
 deployment.apps/nginx-deployment successfully rolled out
 ```
 
+几秒后再次运行`kubectl get deployments`：
+
+```bash
+NAME               DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+nginx-deployment   3         3         3            3           18s
+```
+
+`Deployment`已经创建是三个副本，并且所有副本都是最新的并且可用（Pod状态至少为`Deployment`的`.spec.minReadySeconds`字段的值准备就绪）。
+
+要查看`Deployment`创建的`ReplicaSet`（rs），运行`kubectl get rs`：
+
+```bash
+NAME                          DESIRED   CURRENT   READY   AGE
+nginx-deployment-75675f5897   3         3         3       18s
+```
+
