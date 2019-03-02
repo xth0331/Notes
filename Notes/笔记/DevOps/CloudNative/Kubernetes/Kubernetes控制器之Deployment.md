@@ -109,3 +109,24 @@ NAME                          DESIRED   CURRENT   READY   AGE
 nginx-deployment-75675f5897   3         3         3       18s
 ```
 
+注意，副本集的名称始终格式为`[DEPLOYMENT-NAME]-[RANDOM-STRING]`。随机字符串是随机生成的，并使用pod-template-hash。
+
+查看为每个Pod自动生成的标签，运行`kubectl get pods --show labels`，将返回一下内容：
+
+```bash
+NAME                                READY     STATUS    RESTARTS   AGE       LABELS
+nginx-deployment-75675f5897-7ci7o   1/1       Running   0          18s       app=nginx,pod-template-hash=3123191453
+nginx-deployment-75675f5897-kzszj   1/1       Running   0          18s       app=nginx,pod-template-hash=3123191453
+nginx-deployment-75675f5897-qqcnn   1/1       Running   0          18s       app=nginx,pod-template-hash=3123191453
+```
+
+ 创建的`ReplicaSet`确保始终有三个`nginx`Pod在运行。
+
+#### Pod-template-hash label
+
+> 请勿更改此标签
+
+`Deployment`conrtoller 将`pod-template-hash`标签添加到`Deployment`创建或采用的每个`ReplicaSet`。
+
+此标签可确保`Deployment`的子`ReplicaSet`不重叠。
+
