@@ -233,5 +233,6 @@ Events:
 
 
 
-#### Rollover 
+#### Rollover
 
+每次`Deployment`控制器观察到新的`Deployment`对象时，如果没有现有的`ReplicaSet`，则会创建`ReplicaSet`以显示所需的Pod。
