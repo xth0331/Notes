@@ -401,5 +401,73 @@ nginx-deployment-1989198191   5         5         0         9s
 nginx-deployment-618515232    8         8         8         1m
 ```
 
-然后在出现一个新的`Deployment`扩展请求。`autoscaler`(自动缩放器)将`Deployment`的副本增加到15。`Deployment`控制器需要决定在哪里添加新的5个副本。如果没有使用比例缩放（proportional scaling），则五个副本都将添加到新的`ReplicaSet`中。
+然后在出现一个新的`Deployment`扩展请求。`autoscaler`(自动缩放器)将`Deployment`的副本增加到15。`Deployment`控制器需要决定在哪里添加新的5个副本。如果没有使用比例缩放（proportional scaling），则五个副本都将添加到新的`ReplicaSet`中。通过比例缩放，可以在所有ReplicaSet上传播其他副本。具有最多副本的`ReplicaSet`和较低比例的较大比例转换到具有较少副本的ReplicaSet。任何剩余都会添加到具有最多副本的`ReplicaSet`中。零副本的`ReplicaSet`不会按比例放大。
 
+在上面的示例中，将3个副本添加到旧的`ReplicaSet`，并将2个副本添加到新的`ReplicaSet`。假设新副本变得健康，推出过程最终应将所有副本添加到新的`ReplicaSet`。
+
+```bash
+kubectl get deploy
+NAME                 DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+nginx-deployment     15        18        7            8           7m
+kubectl get rs
+NAME                          DESIRED   CURRENT   READY     AGE
+nginx-deployment-1989198191   7         7         0         7m
+nginx-deployment-618515232    11        11        11        7m
+```
+
+### 暂停和恢复Deployment
+
+你可以在出发一个或多个更新之前暂停`Deployment`，然后恢复它。这将允许你在暂停和恢复之间应用多个修复，而不会出发不必要的部署。
+
+例如，使用刚刚创建的`Deployment`:
+
+```bash
+kubectl get deploy
+NAME      DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+nginx     3         3         3            3           1m
+kubectl get rs
+NAME               DESIRED   CURRENT   READY     AGE
+nginx-2142116321   3         3         3         1m
+```
+
+通过运行以下命令暂停：
+
+```bash
+kubectl rollout pause deployment.v1.apps/nginx-deployment
+```
+
+然后更新部署的镜像：
+
+```bash
+kubectl set image deployment.v1.apps/nginx-deployment nginx=nginx:1.9.1
+```
+
+注意，没有新的，
+
+可以根据需要进行更多更新，例如，更新使用的资源：
+
+```bash
+kubectl set resourcess deployment.v1.apps/nginx-deployment -c=nginx --limit=cpu=200m,memory=512Mi
+```
+
+暂停之前`Deployment`的初始状态将继续其功能，但只要`Deployment`要部署暂停，`Deployment`的新更新将不会产生任何影响。
+
+最后，恢复`Deployment`并观察一个新的`Deployment`，提供所有新的数据。
+
+```bash
+kubectl rollout resume deployment.v1.apps/nginx-deployment
+kubectl get rs -w
+kubectl get rs
+```
+
+### Deployment 状态
+
+部署在其生命周期中进入各种状态。它可以退出新的`ReplicaSet`时进行，可以完成，也可以无法进行。
+
+#### Progressing Deployment
+
+当执行以下任务之一时，Kubernetes将`Deployment`标记为进度：
+
+- `Deployment`创建了一个新的`ReplicaSet`。
+- `Deployment`正在扩展其最新的 `ReplicaSet`。
+- 
