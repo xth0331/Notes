@@ -470,4 +470,10 @@ kubectl get rs
 
 - `Deployment`创建了一个新的`ReplicaSet`。
 - `Deployment`正在扩展其最新的 `ReplicaSet`。
-- 
+- `Deployment`正在缩减其旧的`ReplicaSet`。
+- 新Pod已准备就绪或可用（至少准备MinReadySeconds）。
+
+可以使用`kubectl rollout status`监视`Deployment`的进度。
+
+#### 完成 Deployment
+
