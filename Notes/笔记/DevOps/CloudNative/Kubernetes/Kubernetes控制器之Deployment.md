@@ -235,4 +235,171 @@ Events:
 
 #### Rollover
 
-每次`Deployment`控制器观察到新的`Deployment`对象时，如果没有现有的`ReplicaSet`，则会创建`ReplicaSet`以显示所需的Pod。
+每次`Deployment`控制器观察到新的`Deployment`对象时，如果没有现有的`ReplicaSet`，则会创建`ReplicaSet`以显示所需的Pod。现有的`ReplicaSet`控制其标签与`.spec.selector`匹配但其模板与`.spec.template`不匹配的Pod缩小。最终，新的`ReplicaSet`将缩放为`.spec.replicas`将缩放为`.spec.replicas`，并且所有的`ReplicaSet`将缩放为0。
+
+如果对现有的`Deployment`进行更新，`Deployment`将根据更新创建一个新的`ReplicaSet`并开始向上拓展，并将饭庄之前正在扩展的`ReplicaSet` - 它将把它添加到旧的`ReplicaSet`列表中并开始缩小它。
+
+例如，假设创建了一个`Deployment`创建5个`nginx: 1.7.9`的副本，但随后更新`Deployment`以创建`nginx: 1.9.1`的五个副本，此时仅创建了3个`nginx: 1.7.9`的副本。在这种情况下，`Deployment`将立即开始杀死它创建的3个`nginx: 1.7.9`Pod，并将开始创建`nginx: 1.9.1`Pod。在更改之前，不会等该`nginx: 1.7.9`的副本。
+
+#### Label selector 更新
+
+通常不鼓励进行标签选择器更新，建议事先规划`selector`，在任何情况下，如果需要执行标签选择器更新，务必小心谨慎，确保以掌握含义。
+
+> 在API版本的`app/v1`中，`Deployment`的标签选择器创建后是不可变的。
+
+- 选择器添加要求使用新标签更新`Deployment`规范中的Pod模板标签，否则将返回验证错误。此更改是非重叠的，这意味着新选择器不会选择使用旧选择器创建的`ReplicaSet`和`Pod`，从而导致孤立所有旧`ReplicaSet`并创建新的`ReplicaSet`。
+- 选择器更新 - 也就是说，更改选择建中的现有值 - 导致与添加相同的行为。
+- 选择器移除 - 也就是说，从部署选择器中删除现有`key` - 不需要对Pod模板标签进行任何更改。没有现有的`ReplicaSet`是孤立的，并且未创建新的`ReplicaSet`，但请注意，已删除的标签仍然存在于任何现有Pod中和`ReplicaSet`中。
+
+
+
+### 回滚 Deployment
+
+有时可能要回滚`Deployment`；例如，当部署不稳定时，例如，崩溃循环。默认情况下，所有`Deployment`的历史记录都保留在系统中，以便可以随时回滚。
+
+> 触发Deployment的部署时会创建Deployment的修订版。这意味着当且仅当`Deployment`部署的Pod模板(`.spec.template`)发生更改时才会创建新修订，例如，如果更新模板的标签或容器镜像。其他更新（例如扩展部署）不会创建部署版本，因此可以方便地同时进行手动或自动拓展。这意味着当回滚到早期版本时，仅回滚`Deployment`的Pod模板部分。
+
+假设在更新`Deployment`时输入了拼写错误，方法是将镜像名称`nginx: 1.91`替换为`nginx: 1.9.1`：
+
+```bash
+kubectl set image deployment.v1.apps/nginx-deployment nginx=nginx:1.9.1  --record=true
+```
+
+将看到旧的`replicas`数量是2，新的`replicas`数量是1.
+
+```bash
+kubectl get rs
+```
+
+查看创建的Pod，可以看到由新`ReplicaSet`创建的Pod状态是`ImagePullBackoff`。
+
+> 注意：`Deployment`控制器将自动停止错误的，并将停止扩展新的`ReplicaSet`。这取决于指定的`rollingUpdate`参数（特别是`maxUnavailable`）。默认情况下，Kubernetes将设置为25%。
+
+```bash
+kubectl describe deployment
+Name:           nginx-deployment
+Namespace:      default
+CreationTimestamp:  Tue, 15 Mar 2016 14:48:04 -0700
+Labels:         app=nginx
+Selector:       app=nginx
+Replicas:       3 desired | 1 updated | 4 total | 3 available | 1 unavailable
+StrategyType:       RollingUpdate
+MinReadySeconds:    0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:  app=nginx
+  Containers:
+   nginx:
+    Image:        nginx:1.91
+    Port:         80/TCP
+    Host Port:    0/TCP
+    Environment:  <none>
+    Mounts:       <none>
+  Volumes:        <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    ReplicaSetUpdated
+OldReplicaSets:     nginx-deployment-1564180365 (3/3 replicas created)
+NewReplicaSet:      nginx-deployment-3066724191 (1/1 replicas created)
+Events:
+  FirstSeen LastSeen    Count   From                    SubobjectPath   Type        Reason              Message
+  --------- --------    -----   ----                    -------------   --------    ------              -------
+  1m        1m          1       {deployment-controller }                Normal      ScalingReplicaSet   Scaled up replica set nginx-deployment-2035384211 to 3
+  22s       22s         1       {deployment-controller }                Normal      ScalingReplicaSet   Scaled up replica set nginx-deployment-1564180365 to 1
+  22s       22s         1       {deployment-controller }                Normal      ScalingReplicaSet   Scaled down replica set nginx-deployment-2035384211 to 2
+  22s       22s         1       {deployment-controller }                Normal      ScalingReplicaSet   Scaled up replica set nginx-deployment-1564180365 to 2
+  21s       21s         1       {deployment-controller }                Normal      ScalingReplicaSet   Scaled down replica set nginx-deployment-2035384211 to 1
+  21s       21s         1       {deployment-controller }                Normal      ScalingReplicaSet   Scaled up replica set nginx-deployment-1564180365 to 3
+  13s       13s         1       {deployment-controller }                Normal      ScalingReplicaSet   Scaled down replica set nginx-deployment-2035384211 to 0
+  13s       13s         1       {deployment-controller }                Normal      ScalingReplicaSet   Scaled up replica set nginx-deployment-3066724191 to 1
+```
+
+要解决此问题，需要回滚到稳定的以前版本的`Deployment`。
+
+#### 检查Deployment的历史记录
+
+首先检查此部署的修订：
+
+```bash
+kubectl rollout history deployment nginx-deployment
+deployments "nginx-deployment"
+REVISION    CHANGE-CAUSE
+1           kubectl create --filename=https://k8s.io/examples/controllers/nginx-deployment.yaml --record=true
+2           kubectl set image deployment.v1.apps/nginx-deployment nginx=nginx:1.9.1 --record=true
+3           kubectl set image deployment.v1.apps/nginx-deployment nginx=nginx:1.91 --record=true
+```
+
+`CHANGE-CAUSE`从`Deployment`注释`kubernetes.io/change-cause`复制到创建时的修订版本。可以通过以下方式指定`CHANGE-CAUSE`消息：
+
+- 使用`kubectl annotate deployment.v1.apps/nginx-deployment kubernetes.io/change-cause="image updated to update to 1.9.1"`注释`Deployment`。
+- 附加`--record`标志以保存正在更改资源的`kubectl`命令。
+- 手动编辑资源清单。
+
+要进一步查看每个修订的详细信息，运行：
+
+```bash
+kubectl rollout history deployment.v1.apps/nginx-deployment --reversion=2
+```
+
+#### 回滚到以前的版本
+
+现在，已决定撤销当前并回滚到上一个版本：
+
+```bash
+kubectl rollout undo deployment nginx-deployment 
+```
+
+或者，通过`--to-revision`指定回滚到特定修订：
+
+```bash
+kubectl rollout undo deployment nginx-deployment --to-revision=2
+```
+
+`Deployment`现在回滚到以前的稳定版本。可以看到从`Deployment`控制器生成用于回滚到版本2的`DeploymentRollback`事件。
+
+```bash
+kubectl deployment nginx-deployment
+kubectl describe deployment nginx-deployment
+```
+
+### 扩展Deployment
+
+可以使用以下命令扩展部署：
+
+```bash
+kubectl scale deployment.v1.apps/nginx-deployment --replicas=10
+```
+
+假设集群中开启了HPA（Horizontal Pod Autoscaling），可以为`Deployment`设置`autoscaler`，根据现有Pod的CPU利用率选择要运行的最小和最大Pod数量。
+
+```bash
+kubectl autoscale deployment.v1.apps/nginx-deployment --min=10 --max=15 --cpu-percent=80
+```
+
+#### 比例缩放
+
+`RollingUpdate Deployment`支持同时运行多个版本的应用程序。当你或自动扩展器扩展（正在进行或暂停）的`RollingUpdate Deployment`时，`Deployment`控制器将平衡现有活动`ReplicaSet`中其他副本（ReplicaSet with Pods）以降低风险。这称为比例缩放。例如，正在运行具有10个副本的`Deployment`，`maxSurge=3`，`maxUnavailable=2`。
+
+```bash
+kubectl get deploy
+```
+
+更新到一个新的镜像，该镜像恰好在集群中无法解析。
+
+```bash
+kubectl set image deployment.v1.apps/nginx-deployment nginx=nginx:sometag
+```
+
+镜像更新使用`ReplicaSet-deployment-1989198191`开始新的部署，但是由于上面提到的`maxUnavailabel`要求被阻止。
+
+```bash
+kubetl get rs
+NAME                          DESIRED   CURRENT   READY     AGE
+nginx-deployment-1989198191   5         5         0         9s
+nginx-deployment-618515232    8         8         8         1m
+```
+
+然后在出现一个新的`Deployment`扩展请求。`autoscaler`(自动缩放器)将`Deployment`的副本增加到15。`Deployment`控制器需要决定在哪里添加新的5个副本。如果没有使用比例缩放（proportional scaling），则五个副本都将添加到新的`ReplicaSet`中。
+
