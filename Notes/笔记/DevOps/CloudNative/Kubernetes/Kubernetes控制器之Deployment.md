@@ -477,3 +477,8 @@ kubectl get rs
 
 #### 完成 Deployment
 
+Kubernetes在具有以下特征时将`Deployment`标记为完成：
+
+- 与`Deployment`关联的所有副本都以更新为指定的最新版本，这意味着已请求的更新完成。
+- 可以使用与`Deployment`关联的所有副本。
+- 没有旧的`Deployment`副本正在运行。
