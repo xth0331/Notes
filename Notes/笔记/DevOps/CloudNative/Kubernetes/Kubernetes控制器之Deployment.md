@@ -8,7 +8,7 @@
 
 
 
-## 创建`Deployment`
+### 创建`Deployment`
 
 以下是`Deployment`的示例。它创建了一个`ReplicaSet`来产生三个`nginx`Pod：
 
@@ -421,6 +421,8 @@ nginx-deployment-618515232    11        11        11        7m
 
 例如，使用刚刚创建的`Deployment`:
 
+
+
 ```bash
 kubectl get deploy
 NAME      DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
@@ -495,3 +497,21 @@ echo $?  # if the rollout completed successful，return 0
 `Deployment`可能会在尝试部署最新的`ReplicaSet`时遇到困难，无法完成`Deployment`，这可能由于以下一些因素造成：
 
 - 配额不足
+- `Readiness`探针失败
+- 镜像拉取错误
+- 权限不足
+- 限制范围
+- 应用程序运行时配置错误
+
+检测此情况的一种方法是在`Deployment`规范中指定解释时间参数:(`.spec.progressDeadlineSeconds`)。`.spec.progress.DeadlineSeconds`表示`Deployment`控制器在指示（在`Deployment`状态中）`Deployment`进度已停止之前的等待秒数。
+
+以下`kubectl`命令使用`progressDeadlineSeconds`设置规范，以使控制器报告在10分钟后缺少部署进度：
+
+```bash
+kubectl patch deployment.v1.apps/nginx-deployment -p '{"spec":{"progressDeadlineSeconds":600}}'
+```
+
+超过截止时间后，`Deployment`控制器会将`DeploymentCondition`与以下属性一起添加到`Deployment`的`.status.conditions`：
+
+- 
+
