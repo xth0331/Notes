@@ -482,3 +482,16 @@ Kubernetes在具有以下特征时将`Deployment`标记为完成：
 - 与`Deployment`关联的所有副本都以更新为指定的最新版本，这意味着已请求的更新完成。
 - 可以使用与`Deployment`关联的所有副本。
 - 没有旧的`Deployment`副本正在运行。
+
+可以使用`kubectl rollout status`检查`Deployment`是否已完成。如果成功完成，将返回零退出代码：
+
+```bash
+kubectl rollout status deployment.v1.apps/nginx-deployment
+echo $?  # if the rollout completed successful，return 0
+```
+
+#### Deployment 失败
+
+`Deployment`可能会在尝试部署最新的`ReplicaSet`时遇到困难，无法完成`Deployment`，这可能由于以下一些因素造成：
+
+- 配额不足
