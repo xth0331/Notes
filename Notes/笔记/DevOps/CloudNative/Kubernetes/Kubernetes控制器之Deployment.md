@@ -513,5 +513,57 @@ kubectl patch deployment.v1.apps/nginx-deployment -p '{"spec":{"progressDeadline
 
 超过截止时间后，`Deployment`控制器会将`DeploymentCondition`与以下属性一起添加到`Deployment`的`.status.conditions`：
 
-- 
+- Type=Progressing
+- State=False
+- Reason=ProgressDeadlineExceeded
+
+由于设置的超时时间较短或者由于任何其他可被视为瞬态的错误，可能会遇到`Deployment`的暂时性错误。例如，假设您的配额不足。如果描述`Deployment`，将注意到以下部分:
+
+```bash
+kubectl describe deployment nginx-deployment
+```
+
+```bash
+<...>
+Conditions:
+  Type            Status  Reason
+  ----            ------  ------
+  Available       True    MinimumReplicasAvailable
+  Progressing     True    ReplicaSetUpdated
+  ReplicaFailure  True    FailedCreate
+<...>
+```
+
+最终，一旦超出部署进度截止日期，Kubernetes将更新状态和进度条件的原因：
+
+```bash
+Conditions:
+  Type            Status  Reason
+  ----            ------  ------
+  Available       True    MinimumReplicasAvailable
+  Progressing     False   ProgressDeadlineExceeded
+  ReplicaFailure  True    FailedCreate
+```
+
+可以通过缩小部署，缩小可能正在运行的其他控制器或增加命名空间中的配额来解决配额不足的问题。如果您满足配额条件，然后部署控制器完成“部署”卷展栏，您将看到部署状态更新成功条件（`Status=True`和`Reason=NewReplicaSetAvailable`）。
+
+
+
+### 清理策略
+
+可以在`Deployment`中设置`.spec.revisionHistoryLimit`字段，以指定要保留此`Deployment`的旧`ReplicaSet`数量。其余的将在后台进行垃圾回收，默认情况下，是10。
+
+> 此字段设置为０将导致清理所有的历史记录，从而导致　`Deployment`无法回滚。
+
+### 用例
+
+
+
+#### 金丝雀部署
+
+如果要使用`Deployment`将发布部署到用户或服务器的子集，则可以按照惯例资源中描述的`canary`模式创建多个部署，每个版本一个。
+
+
+
+### 编写`Deployment`规范（spec）
 
