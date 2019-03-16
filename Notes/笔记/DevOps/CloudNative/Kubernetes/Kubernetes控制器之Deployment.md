@@ -567,3 +567,21 @@ Conditions:
 
 ### 编写`Deployment`规范（spec）
 
+与其他所有Kubernetes配置一样，`Deployment`需要`apiVersion`，`kind`和`metadata`字段。还需要`.spec`字段。
+
+#### Pod Template
+
+`spec.template`是`.spec`中唯一必须的字段。
+
+`.spec.template`是一个Pod模板。它与Pod具有完全相同的架构，除了它是嵌套的并且没有`apiVerison`和`kind`。
+
+除了Pod的必填字段外，`Deployment`中的Pod模板还必须指定适当的标签和适当的重启策略。对于标签，确保不要与其他控制器重叠。
+
+#### Replicas
+
+`.spec.replicas`是一个可选字段，用于指定所需的Pod数量，默认为1。
+
+#### Selector
+
+`.spec.selector`是一个可选字段，它指定`Deployment`所针对的Pod的标签选择器。
+
