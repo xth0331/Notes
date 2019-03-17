@@ -585,3 +585,27 @@ Conditions:
 
 `.spec.selector`是一个可选字段，它指定`Deployment`所针对的Pod的标签选择器。
 
+`.spec.selector`必须与`.spec.template.metadata.labels`匹配，否则它将被API拒绝。
+
+在API版本中的`apps/v1`,`.spce.selector`和`.metadata.labels`中，如果未设置，则不会默认为`.spec.template.metadata.labels`。所以必须明确设置。注意，在`apps/v1`中创建`Deployment`后，`.spec.selector`是不可变的。
+
+如果其模板与`.spec.template`不同，或此类Pod的总数超过`.spec.replicas`，则`Deployment`可以终止其标签与选择器匹配的Pod。如果Pod的数量小于所需的数量，它会带有`.spec.template`的新Pod。
+
+> 不应通过创建另一个`Deployment`，或通过创建另一个控制器（如`ReplicaSet`或`ReplicationController`）来创建其标签与此选择器匹配的其他Pod。如果这样做，第一个`Deployment`认为它创建了其他这些pod。Kubernetes并没有阻止你这样做。
+
+如果有多个具有重叠选择器的控制器，控制器将互相争斗并且行为不正确。
+
+#### Strategy
+
+`.spec.strategy`指定用于替换旧Pod的策略。`.spec.strategy.type`可以是`RollingUpdate`或`Recreate`。`RollingUpdate`是默认值。
+
+##### Recreate Deployment
+
+
+
+
+
+
+
+
+
