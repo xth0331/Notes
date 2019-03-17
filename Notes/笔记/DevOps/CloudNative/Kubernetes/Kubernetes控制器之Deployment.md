@@ -601,11 +601,59 @@ Conditions:
 
 ##### Recreate Deployment
 
+在`.spec.strategy.type==Recrate`时创建新的Pod之前，所有现有Pod都将被终止。
 
 
 
+##### Rolling Update Deployment
+
+当`.spec.strategy.type==RollingUpdate`时，`Deployment`以滚动更新的方式更新Pod。可以指定`maxUnavailable`和`maxSurge`来控制滚动更新过程。
 
 
 
+###### Max Unavailable
 
+ `spec.strategy.rollingUpdate.maxUnvailable`是一个可选，指定更新过程中可用的最大Pod数。该值可以是绝对值或所需Pod的百分比。通过四舍五入计算数字的百分比。如果`.spec.strategy.rollingUpdate.maxSurge`为0，则该值不能为0，默认为25%。
+
+
+
+###### Max Surge
+
+`.spec.strategy.rollingUpdate.maxSurge`是一个可选字段，指定可以在所需数量的Pod上创建的最大Pod数。该值可以是数值或所需的百分比。如果`maxUnavailable`为0，则该值不能为0.数量是通过向上舍入的百分比计算的。默认25%。
+
+#### Progress Deadline Seconds
+
+`.spec.progressDeadlineSeconds`是一个可选字段，指定在系统报告部署失败进度之前要等待部署进度的描述 — 表现为`Type=Progressing`，`Status=False`的条件。和`Reaso=ProgressDeadlineExceeded`字段的状态。`Deployment`控制器将继续重试`Deployment`。将来，一旦实现自动滚动，`Deployment`控制器将在观察到这种情况后立即回滚`Deployment`。
+
+如果指定，此字段必须大于`.spec.minReadySeconds`。
+
+#### Min Ready Seconds
+
+`.spec.minRradySeconds`是一个可选字段，它指定新创建的Pod应该准备好的最小秒数，而不会使其任何容器崩溃，以使其可用。默认为0（Pod一旦准备好就会被视为可用）。
+
+#### Rollback To
+
+字段`.spec.rollbackTo`已在API版本`extensions/v1beta1`和`apps/v1beta1`，中弃用，并且在启动`apps/v1beta2`的API版本中不再受支持。相反，应该使用回滚到先前版本中引入的`kubectl rollout undo`。
+
+#### Revision History Limit
+
+`Deployment`的修订历史记录存储在它控制的`ReplicaSets`控制器中。
+
+`.spec.revisionHistoryLimit`是一个可选字段，指定要保留以允许回滚的旧`ReplicaSet`数量。这些旧的`ReplicaSets`消耗了`etcd`中的字段并且拥挤了`kubectl get rs`的输出。每个`Deployment`修订版的配置都存储在其`ReplicaSet`中；因此，一旦删除旧的`ReplicaSet`，将无法回滚到该版本。默认情况，将保留10个旧的`ReplicaSet`但其理想值取决于新`Deployment`的频率和稳定性。
+
+更具体的说，将此字段设置为0意味着将清除所有具有0个副本的旧`ReplicaSet`。这种情况下，无法撤销新的`Deployment`因为它的修订历史记录已清除。
+
+
+
+#### Paused
+
+`.spec.paused`是一个可选的布尔字段，用于暂定和恢复`Deployment`。暂定`Deployment`与未暂停`Deployment`之间的唯一区别是，暂停`Deployment`的PodTemplateSpec的任何更改都不会触发新的`Deployment`，只要它暂停即可。默认情况下，`Deployment`载创建时不会暂停。
+
+
+
+### 部署的替代方案
+
+#### kubectl滚动更新
+
+`kubectl rolling update`以类似的方式更新Pod和ReplicationControllers。但建议使用部署，因为它们是声明性的，服务器端，并且具有其他功能，例如即使在滚动更新完成后回滚到任何先前的修订版。
 
