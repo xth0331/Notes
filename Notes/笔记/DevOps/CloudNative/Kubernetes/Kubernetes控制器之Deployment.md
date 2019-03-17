@@ -656,4 +656,3 @@ Conditions:
 #### kubectl滚动更新
 
 `kubectl rolling update`以类似的方式更新Pod和ReplicationControllers。但建议使用部署，因为它们是声明性的，服务器端，并且具有其他功能，例如即使在滚动更新完成后回滚到任何先前的修订版。
-
