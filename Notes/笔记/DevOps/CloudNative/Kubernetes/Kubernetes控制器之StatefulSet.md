@@ -100,4 +100,46 @@ spec:
 
 ### Stable Network ID
 
-`StatefuleSet`中的每个Pod都从`StatefulSet`的名称和Pod的序号中获取其主机名。 
+`StatefuleSet`中的每个Pod都从`StatefulSet`的名称和Pod的序号中获取其主机名。 构造的主机名模式是`$(statefulset name)-$(ordinal)`。上面的示例将创建三个名为`web-0,web-1,web-2`的Pod。`StatefulSet`可以使用无头服务来控制其Pod的域。此服务管理的域采用以下形式：`$(service name).$(namespace).svc.cluster.local`，其中`cluster.local`是集群域。在创建每个Pod时，它将获得匹配的DNS子域，采用以下形式：`$(podname).$(governing service domain)，其中管理服务由`StatefulSet上的`serviceName`字段定义。
+
+如限制部分所述，您负责创建负责Pod网络身份的Headless服务。
+
+以下是Cluster Domain，Service name， StatefulSet的Pod的DNS名称的一些选择示例。
+
+| Cluster Domain | Service (ns/name) | StatefulSet (ns/name) | StatefulSet Domain              | Pod DNS                                      | Pod Hostname |
+| :------------- | :---------------- | :-------------------- | :------------------------------ | :------------------------------------------- | :----------- |
+| cluster.local  | default/nginx     | default/web           | nginx.default.svc.cluster.local | web-{0..N-1}.nginx.default.svc.cluster.local | web-{0..N-1} |
+| cluster.local  | foo/nginx         | foo/web               | nginx.foo.svc.cluster.local     | web-{0..N-1}.nginx.foo.svc.cluster.local     | web-{0..N-1} |
+| kube.local     | foo/nginx         | foo/web               | nginx.foo.svc.kube.local        | web-{0..N-1}.nginx.foo.svc.kube.local        | web-{0..N-1} |
+
+### Stable Storage
+
+Kubernetes为每个VolumeClaimTemplate创建一个PersistentVolume。在上面的示例中，每个Pod将接收一个PersistentVolume，其StorageClass为`my-storage-class`和1Gib的存储。如果未指定StorageClass，则将使用默认的StorageClass。当Pod重新调度到节点上时，其`volumeMounts`将挂载与其PersistentVolume Claims关联的PersistentVolumes。注意，删除Pod或`StatefuleSet`时，不会删除与Pod的PersistentVolume Claims关联的PersistentVolumes。这必须手动完成。
+
+### Pod Name Label
+
+当StatefulSet控制器创建Pod时，它会添加一个标签`statefulset.kubernetes.io/pod-name`，该标签设置为Pod的名称。此标签允许将`Service`附加到`StatefulSet`中特定的Pod。
+
+## Deployment的拓展保证
+
+- 对于具有N个副本的StatefulSet，当部署Pod时，将按顺序从{0…N-1}开始创建他们。
+- 当删除Pod时，他们将以{N-1..0}的相反顺序终止。
+- 在将缩放操作应用于Pod之前，其之前的必须是Running或Ready。
+- 在Pod终止前，所有的后继者必须完全关闭。
+
+### Pod管理策略
+
+在Kubernetes 1.7及更高版本中，StatefulSet允许您放宽其排序保证，同时通过其`.spec.podManagementPolicy`字段保留其唯一性和身份保证。
+
+#### OrderedReady Pod管理
+
+`OrderedReady`pod管理是`StatefulSet`的默认设置。
+
+#### Parallel Pod 管理
+
+`Paraller`pod管理告诉我们`StatefulSet`控制器并行启动或终止所有Pod，并且在启动或终止一个Pod之前不等待pod变成`Ready`或完全终止。
+
+## 更多策略
+
+`OnDelete`更新策略实现了遗留行为。当StatefulSet的`.spec.updateStrategy`设置为`OnDelete`时，不会自动更新StatefulSet中的Pod。用户必须手动删除Pod才能使控制器创建新的Pod，以反映对StatefulSet的`.spec.template`所做的修改。
+
