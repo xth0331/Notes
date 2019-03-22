@@ -139,7 +139,32 @@ Kubernetes为每个VolumeClaimTemplate创建一个PersistentVolume。在上面�
 
 `Paraller`pod管理告诉我们`StatefulSet`控制器并行启动或终止所有Pod，并且在启动或终止一个Pod之前不等待pod变成`Ready`或完全终止。
 
-## 更多策略
 
-`OnDelete`更新策略实现了遗留行为。当StatefulSet的`.spec.updateStrategy`设置为`OnDelete`时，不会自动更新StatefulSet中的Pod。用户必须手动删除Pod才能使控制器创建新的Pod，以反映对StatefulSet的`.spec.template`所做的修改。
 
+## 更新策略
+
+`StatefulSet`的`.spec.updateStrategy`字段允许为`StatefulSet`中的Pod配置和禁用容器，标签，资源请求/限制和注释的自动滚动更新。
+
+### 关于删除
+
+`OnDelete`更新策略实现了遗留行为。当`StatefulSet`的`.spec.updateStrategy.type`设置为`OnDelete`时，`StatefulSet`控制器不会自动更新`StatefulSet`中的Pod。用户必须手动删除Pod才能使控制器创建的新Pod。以反映对`StatefulSet`的`.spec.template`所做的修改。
+
+### 滚动更新
+
+`RollingUpdate`更新策略为`StatefulSet`中的Pod实现自动滚动更新。当`.spec.updateStarategy`未指定时，这是默认存储策略。当`StatefulSet`的`.spec.updateStrategy.type`设置为`RollingUpdate`时，`StatefulSet`控制器将删除并重新创建`StatefulSet`中的每个Pod。它将以与Pod终止相同的顺序集训进行，一次更新每个Pod。在更新其前任之前，它将等待更新的Pod正在运行并准备就绪。
+
+
+
+#### Partitions
+
+可以通过指定`.sepc.updateStrategy.rollingUpdate.partition`来分区`RollingUpdate`更新策略。如果指定了Partitions,则更新`StatefulSet`的`.spec.template`时，将更新序列大于或等于该分区的所有Pod。需要小于分区的所有Pod都不会更新，即使他们被删除，他们也会在之前的版本中重新创建。如果`StatefulSet`的`.sepc.updateStrategy.rollingUpdate.patrition`大于其`.spec.replicas`，则对其`.spec.template`的更新将不会传播到其Pod。在大多数情况下，不需要使用分区，但如果要进行更新，退出金丝雀或执行分阶段发布，他们非常有用。
+
+#### 强制回滚
+
+使用具有默认Pod管理策略（**OrderedReady**）的RollingUpdates时，可能会进入需要手动干预进行修复的损坏状态。
+
+如果将Pod模板更新为永远不会运行和就绪的配置，`StatefulSet`将停止退出并等待。
+
+在这种状态下，仅将Pod模板恢复为良好配置是不够的。由于已知问题，`StatefulSet`将继续等待损坏的Pod变为就绪状态，染回将尝试将其恢复为工作配置。
+
+还原模板后，还必须删除`StatefulSet`已尝试使用错误配置运行的任何Pod。然后`StatefulSet`将开始使用恢复的模板创建pod。
