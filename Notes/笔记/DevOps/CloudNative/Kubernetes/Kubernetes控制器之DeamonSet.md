@@ -113,4 +113,19 @@ spec:
 
 `DeamonSet`确保所有符合条件的节点都运行Pod副本。通常，Kubernetes导读程序选择Pod运行的节点，但是，`DeamonSet`控件是由`DeamonSet`控制器创建和调度的。这引入以下问题：
 
-- 不一致的Pod行为：
+- 不一致的Pod行为：等待计划正常Pod以创建并处于`Pending`状态，但`DeamonSet`未在`Pending`状态下创建。让用户感到困惑。
+- Pod抢占由默认调度程序处理。启用抢占后，`DeamonSet`控制器将在不考虑Pod优先级和抢占的情况下制定调度决策。
+
+`ScheduleDeamonSetPods`允许使用默认调度程序而不是`DeamonSet`控制器来调度，方法是将`NodeAffinitty`术语添加到`DeamonSet`，而不是`.spec.nodeName`。然后使用默认调度程序将Pod绑定到目标主机。如果`DeamonSet`Pod的节点关联已存在，则替换它。`DeamonSet`控制器仅在创建或修改`DeamonSet`Pod时垂直型这些操作，并且不对`DeamonSet`的`.spec.template`进行任何更改。
+
+```yaml
+nodeAffinity:
+  requiredDuringSchedulingIgnoredDuringExecution:
+    nodeSelectorTerms:
+    - matchFields:
+      - key: metadata.name
+        operator: In
+        values:
+        - target-host-name
+```
+
