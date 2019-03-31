@@ -143,3 +143,46 @@ nodeAffinity:
 | `node.kubernetes.io/memory-pressure`     | NoSchedule | 1.8+    |                                                              |
 | `node.kubernetes.io/unschedulable`       | NoSchedule | 1.12+   | DeamonSet Pod可以通过默认调度程序容忍不可调度的属性。        |
 | `node.kubernetes.io/network-unavailable` | NoSchedule | 1.12+   | DaemonSet pods, who uses host network, tolerate network-unavailable attributes by default scheduler. |
+
+## 与Daemon Pods进行通信
+
+在DeamonSet中与Pod通信的一些可能模式是：
+
+- **Push**： DeamonSet中的Pod配置为将更新发送到另一个服务，例如stats数据库。它们没有客户端。
+- **NodeIP和已知的端口**：DeamonSet中的Pod可以使用`hostPort`，以便可以通过节点IP访问Pod。客户端以某种方式知道节点IP列表，并按惯例了解端口。
+- **DNS**：使用相同的Pod选择器创建headless服务。然后使用`endpoints`资源发现DeamonSet并从DNS检索多个A记录。
+- **Service**：使用相同的Pod选择器创建Service，并使用该服务在随机节点上访问守护程序。（无法达到特定节点。）
+
+## 更新 DaemonSet
+
+如果更改了节点标签，DeamonSet会立即将Pod添加到新匹配的节点，并从新匹配的节点中删除Pod。
+
+可以修改DeamonSet创建的Pod，但是，Pod不允许更新所有字段。此外，DeamonSet控制器将在下次创建节点时使用原始模板。
+
+可以删除DeamonSet。如果使用`kubectl`指定`--cascade=false`，则Pod将保留在节点上。然后，可以使用不同的模板创建新的DeamonSet。具有不同模板的新DeamonSet会将所有现有Pod识别为具有匹配标签。尽管Pod模板不匹配，它也不会修改或删除他们。需要通过删除Pod或删除节点来强制创建新的Pod。可在DeamonSet上执行滚动更新。
+
+
+
+## DaemonSet的替代品
+
+### Init Scripts
+
+通过在节点上直接启动守护进程（例如使用Init，upstartd或systemd）来运行守护进程当然是可能的。这很好。但是，通过DeamonSet运行此类进程有几个优点：
+
+- 能够像应用程序一样监控和管理守护进程的日志。
+- 用于守护进程和应用程序的相同配置语言和工具（例如Pod模板，kubectl）。
+- 在具有资源限制的容器中运行守护进程会增加应用程序容器中守护程序之间的隔离。但是这也可以通过在容器中运行守护进程而不是在Pod中运行（例如直接通过Docker启动）来实现。
+
+### Bare Pods
+
+可以直接创建Pod，指定要运行的特定节点。但是，DeamonSet会替换因任何原因而被删除或终止的Pod，例如在节点故障或破坏性节点维护（例如内核升级）的情况的当下。因此，应该使用DeamonSet而不是创建单个Pod。
+
+### Static Pods
+
+可以通过将文件写入`kubelet`监控某个目录来创建Pod。这被称为静态Pod。与DeamonSet按不同，无法使用kubectl或其他API客户端管理静态Pod。静态Pod不依赖apiserver，因此在集群引导情况下非常有用。此外，将来可能不推荐使用静态Pod。
+
+### Deployments
+
+DaemonSets类似于[Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)，因为它们都创建Pod，而那些Pod具有不期望终止的进程（例如Web服务器，存储服务器）。
+
+将部署用于无状态服务（如前端），其中扩展和减少副本数量以及推出更新比控制Pod运行的主机更为重要。当重要的是Pod的副本总是在所有或某些主机上运行，以及何时需要在其他Pod之前启动时，请使用DaemonSet。
