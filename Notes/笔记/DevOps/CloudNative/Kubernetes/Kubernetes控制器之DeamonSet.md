@@ -183,6 +183,6 @@ nodeAffinity:
 
 ### Deployments
 
-DaemonSets类似于[Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)，因为它们都创建Pod，而那些Pod具有不期望终止的进程（例如Web服务器，存储服务器）。
+DaemonSets类似于Deployments，因为它们都创建Pod，而那些Pod具有不期望终止的进程（例如Web服务器，存储服务器）。
 
 将部署用于无状态服务（如前端），其中扩展和减少副本数量以及推出更新比控制Pod运行的主机更为重要。当重要的是Pod的副本总是在所有或某些主机上运行，以及何时需要在其他Pod之前启动时，请使用DaemonSet。
