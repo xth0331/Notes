@@ -129,4 +129,17 @@ nodeAffinity:
         - target-host-name
 ```
 
-另外
+此外，`node.kubernetes.io/unschedulable:NoSchedule`容错会自动添加到DeamonSet Pods。在调度`DeamonSet`Pod时，默认调度程序会忽略不可调度的节点。
+
+### 污点和容忍
+
+尽管`DeamonSet`尊重污点和容忍度，但根据相关功能，`DeamonSet` Pods会自动添加以下容忍。
+
+| Toleration Key                           | Effect     | Version | Description                                                  |
+| :--------------------------------------- | :--------- | :------ | :----------------------------------------------------------- |
+| `node.kubernetes.io/not-ready`           | NoExecute  | 1.13+   | DaemonSet pods will not be evicted when there are node problems such as a network partition. |
+| `node.kubernetes.io/unreachable`         | NoExecute  | 1.13+   | 当存在诸如网络分区之类的节点问题时，不会驱逐DeamonSet Pod    |
+| `node.kubernetes.io/disk-pressure`       | NoSchedule | 1.8+    |                                                              |
+| `node.kubernetes.io/memory-pressure`     | NoSchedule | 1.8+    |                                                              |
+| `node.kubernetes.io/unschedulable`       | NoSchedule | 1.12+   | DeamonSet Pod可以通过默认调度程序容忍不可调度的属性。        |
+| `node.kubernetes.io/network-unavailable` | NoSchedule | 1.12+   | DaemonSet pods, who uses host network, tolerate network-unavailable attributes by default scheduler. |
