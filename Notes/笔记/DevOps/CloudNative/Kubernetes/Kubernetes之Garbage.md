@@ -84,19 +84,48 @@ Kubernetes立即删除所有者对象，然后垃圾收集器在后台删除依�
 
 要控制级联删除策略，请在删除对象时在`deleteOptions`参数上设置`propagationPolicy`字段。 可选值包括 “Orphan”, “Foreground”, 或“Background”.
 
+在Kubernetes 1.9之前，许多控制器资源的默认垃圾收集策略是`orphan`。这包括ReplicationController，ReplicaSet，StatefulSet，DaemonSet和Deployment。对于种的`extensions/v1beta1`，`apps/v1beta1`和`apps/v1beta2`组版本，除非另行指定，相关对象默认孤儿。在Kubernetes 1.9中，对于`apps/v1` 组版本中的所有类型，默认情况下会删除依赖对象。
 
 
 
+这是一个在后台删除依赖项的示例：
+
+```bash
+kubectl proxy --port=8080
+curl -X DELETE localhost:8080/apis/apps/v1/namespaces/default/replicasets/my-repset \
+-d '{"kind":"DeleteOptions","apiVersion":"v1","propagationPolicy":"Background"}' \
+-H "Content-Type: application/json"
+```
 
 
 
+这是删除前台中的依赖项的示例：
+
+```bash
+kubectl proxy --port=8080
+curl -X DELETE localhost:8080/apis/apps/v1/namespaces/default/replicasets/my-repset \
+-d '{"kind":"DeleteOptions","apiVersion":"v1","propagationPolicy":"Foreground"}' \
+-H "Content-Type: application/json"
+```
 
 
 
+以下是孤儿依赖的一个例子：
 
+```shell
+kubectl proxy --port=8080
+curl -X DELETE localhost:8080/apis/apps/v1/namespaces/default/replicasets/my-repset \
+-d '{"kind":"DeleteOptions","apiVersion":"v1","propagationPolicy":"Orphan"}' \
+-H "Content-Type: application/json"
+```
 
+kubectl还支持级联删除。要使用kubectl自动删除依赖项，请设置`--cascade`为true。对于孤儿依赖者，设置`--cascade`为false。默认值为`--cascade` true。
 
+这是一个孤立ReplicaSet的依赖项的例子：
 
+```shell
+kubectl delete replicaset my-repset --cascade=false
+```
 
 
 
