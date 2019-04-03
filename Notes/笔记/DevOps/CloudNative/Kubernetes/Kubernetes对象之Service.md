@@ -10,3 +10,21 @@ Kubernetes `Service`是一个抽象，它定义了一组逻辑Pod和一个访问
 
 对于Kubernetes原生应用，Kubernetes提供了一个简单的`Endpoints`API，只要`Service`中的Pod发生变化，它就会更新。对于非原生应用，Kubernetes提供一个基于虚拟IP的服务桥接，重定向到后端Pod。
 
+## 定义service
+
+Kubernetes中`Service`是一个REST对象，类似与Pod。与所有REST对象一样，可以将`Service`定义POSTed到apiserver来创建一个新实例。例如，假设有一组Pod，每个Pod都暴露端口9376并带有标“app=MyApp”。
+
+```yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: MyApp
+  posts:
+  - protocol: TCP
+    port: 80
+    targetPort: 9376
+```
+
