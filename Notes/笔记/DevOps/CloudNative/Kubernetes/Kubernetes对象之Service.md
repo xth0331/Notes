@@ -28,3 +28,5 @@ spec:
     targetPort: 9376
 ```
 
+此规范将创建一个名为**my-service**的新`Service`对象，该对象使用`app=MyApp`标签的Pod上的TCP端口9376。
+
