@@ -34,3 +34,47 @@ spec:
 
 `TCP`是`Service`的默认协议，还可以使用任何其他支持的协议。由于许多`Service`需要暴露多个端口，因此Kubernetes支持`Service`对象上定义多个端口。每个端口定义可以具有相同或不同的协议。
 
+### Services without selectors
+
+`Service`通常抽象访问Kubernetes的Pod，但它们也可以抽象其他类型的后端。例如:
+
+- 希望在生产中拥有外部数据库集群，但在测试中使用自己的数据库。
+- 希望将`Service`指向另一个namespace或拎一个集群上的`Service`。
+- 正在将工作负载迁移到Kubernetes，并且一些后端在Kubernetes之外运行。
+
+在任何这些场景中，都可以定义不带选择器（selector）的`Service`:
+
+```yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: my-service
+spec:
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 9376
+```
+
+由于此`Service`没有选择器，因此不会创建相应的`Endpoints`对象。可以手动将`Service`映射到自己的特定endpoint：
+
+```yaml
+kind: Endpoints
+apiVersion: v1
+metadata:
+  name: my-service
+subsets:
+  - addresses:
+    - ip: 1.2.3.4
+  ports:
+    - port:9376 
+```
+
+> 注意：endpoint IP可能不是回环，本地链路或本地多播链路。他们不能是其他Kubernetes `Service`的ClusterIP，因为`kube-porxy`组件不支持虚拟Ip作为目标。
+
+在没有选择器的情况下访问Service的工作方式与具有选择器的方式相同。流量将路由到用户定义的endpoint（例子中的1.2.3.4:9376）。
+
+ `ExternalName`是一种特殊情况的`Service`。他没有选择器而是使用DNS名称。
+
+## Virtual IPs and service proxies
+
