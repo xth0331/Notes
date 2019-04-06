@@ -28,5 +28,9 @@ spec:
     targetPort: 9376
 ```
 
-此规范将创建一个名为**my-service**的新`Service`对象，该对象使用`app=MyApp`标签的Pod上的TCP端口9376。
+此规范将创建一个名为**my-service**的新`Service`对象，该对象使用`app=MyApp`标签的Pod上的TCP端口9376。此`Service`还分配一个IP地址（ClusterIP），由服务代理使用。`Service`的选择器将持续评估，并将结果POSTed到名为`my-service`的`Endpoints`对象。
+
+注意，`Service`可以将传入端口映射到任何`targetPort`。默认情况下，`targetPort`将设置为与端口字段相同的值。也许更有趣的是，`targetPort`可以是一个字符串，指的是后端Pod中端口的名字。分配给该名称的实际端口号在每个后端Pod中可以不同。这位部署和发展`Service`提供了很大的灵活性。例如，可以更改Pod在下个版本的后端软件中公开的端口号，而不会破坏客户端。
+
+`TCP`是`Service`的默认协议，还可以使用任何其他支持的协议。由于许多`Service`需要暴露多个端口，因此Kubernetes支持`Service`对象上定义多个端口。每个端口定义可以具有相同或不同的协议。
 
