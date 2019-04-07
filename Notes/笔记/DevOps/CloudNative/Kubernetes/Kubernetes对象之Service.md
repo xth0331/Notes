@@ -78,3 +78,22 @@ subsets:
 
 ## Virtual IPs and service proxies
 
+Kubernetes集群中的每个节点都运行一个`kube-proxy`。`kube-proxy`负责为`ExternalName`以外的类型的服务实现一种形式的虚拟IP。
+
+在Kubernetes v1.0中，`Service`是四层（基于IP的TCP/UDP），proxy仅仅在用户空间中。在v1.1中，添加了`Ingress`API来表示七层（HTTP）服务，也添加了iptables代理，并成为v1.2依赖的默认工作模式。v1.8添加了ipvs代理。
+
+### 代理模式: 用户空间
+
+在此模式下,`kube-proxy`灰监视master以添加和删除`Service`和`Endpoints`对象。对于每个`Service`，它在本地节点打开一个端口（随机选择）。与此代理端口的任何连接都将代理到其中一个`Service`的后端Pod。根据`Service`的`SessionAffinity`决定使用哪个后端Pod。最后，它安装iptables规则，捕获流量到`Service`的ClusterIP（虚拟）和端口，并将流量重定向到代理后端Pod的代理端口。默认情况下，后端的选择是循环。
+
+![](https://blog-image.nos-eastchina1.126.net/Service-userspace.jpg)
+
+### 代理模式: iptables
+
+在此模式下，`kube-proxy`会监视master已添加和删除`Service`的`Endpoints`对象。对于每个`Service`，它安装iptables规则，捕获到`Service`的ClusterIP（虚拟）和端口的流量，并将流量重定向到`Service`后端之一。对于每个`Endpoints`对象，它会安装选择后端Pod的iptables规则。默认情况下，后端选择是随机的。
+
+显然，iptables不需要在用户空间和内核空间之间切换，它应该比用户空间代理更快，更可靠。但是，与用户空间代理不同，如果最初选择的那个Pod没有响应，则iptables代理无法自动重试另一个Pod，因为依赖于具有工作准备情况的探针。
+
+![](https://blog-image.nos-eastchina1.126.net/Service-iptables.jpg)
+
+在任何这些代理模式中，绑定到`Service`的IP:Port的任何流量都代理到了适当的后端，而客户端不知道有关Kubernetes或`Service`或Pod的任何信息。
