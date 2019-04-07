@@ -96,4 +96,7 @@ Kubernetes集群中的每个节点都运行一个`kube-proxy`。`kube-proxy`负�
 
 ![](https://blog-image.nos-eastchina1.126.net/Service-iptables.jpg)
 
-在任何这些代理模式中，绑定到`Service`的IP:Port的任何流量都代理到了适当的后端，而客户端不知道有关Kubernetes或`Service`或Pod的任何信息。
+在任何这些代理模式中，绑定到`Service`的IP:Port的任何流量都代理到了适当的后端，而客户端不知道有关Kubernetes或`Service`或Pod的任何信息。可以通过将`service.spec.sessionAffinity`设置为`ClientIP`（默认为“None”）来选择基于客户端IP的会话亲和关系，并且可以通过设置字段`service.spec.sessionAffinityConfig.clientIP.timeoutSeconds`来设置最大会话黏连时间。如果已将`service.spec.sessionAffinity`设置为`ClientIP`，则timeout（默认为10800）。
+
+## Multi-Port Services
+
