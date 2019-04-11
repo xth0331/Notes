@@ -160,3 +160,39 @@ Kubernetes支持两种发现`Service`的主要模式 - 环境变量和DNS。
 
 ### 环境变量
 
+当Pod在节点上运行时，kubelet为每个活动Service添加一组环境变量。它支持Docker links和更简单的`{SVCNAME}_SERVICE_HOST`和`{SVCNAME}_SERVICE_PORT`变量，其中Service名称为大写，“-” 转换为“_”。
+
+例如，暴露TCP端口6379并已分配集群IP地址10.0.0.11的Service`redis-master`生成一下环境变量：
+
+```shell
+REDIS_MASTER_SERVICE_HOST=10.0.0.11
+REDIS_MASTER_SERVICE_PORT=6379
+REDIS_MASTER_PORT=tcp://10.0.0.11:6379
+REDIS_MASTER_PORT_6379_TCP=tcp://10.0.0.11:6379
+REDIS_MASTER_PORT_6379_TCP_PROTO=tcp
+REDIS_MASTER_PORT_6379_TCP_PORT=6379
+REDIS_MASTER_PORT_6379_TCP_ADDR=10.0.0.11
+```
+
+这确实意味着要求 - 必须在Pod本身创建Pod想要访问的任何服务，否则将不会填充环境变量。DNS没有此限制。
+
+### DNS
+
+可选（尽管强烈推荐）集群加载项是DNS服务器。DNS服务器监控Kubernetes API以获取新Service，并为每个Service创建一组DNS记录。如果在整个集群中启用了DNS，则所有Pod应该能够自动对Service进行解析。
+
+例如，如果在名为`my-ns`的Kubernetes命名空间中有一个名为`my-service`的服务，则会创建`my-service.my-ns`的DNS记录。存在于`my-ns`命名空间中的Pod应该能够通过简单地对`my-service`进行名称查找来找到它。存在于其他命名空间的Pod必须将名称限定为`my-service.my-ns`。这些名称查询的结果第ClusterIP。
+
+Kubernetes还支持命名端口的DNS SRV记录。如果`my-service.my-ns`服务具有带协议TCP的名为`http`的端口，则可以对`_http._tcp.my-service.my-ns`执行DNS SRV查询一发现端口号`http`。
+
+Kubernetes DNS服务器是访问`ExternalName`类型服务的唯一方法。
+
+## Headless services
+
+有时不需要或不需要LB和单个Service IP。在这种情况下，可以通过为集群IP(`.spec.clusterIP`)指定`None`来创建无头服务。
+
+此选项允许开发人员通过允许他们自由地以自己的方式进行发现来减少与Kubernetes系统的耦合。应用程序仍然可以使用自注册模式，并且可以轻松的在此API上构建适用于其他发现系统的适配器。
+
+对于此类服务，未分配 Cluster IP，`kube-proxy`不处理这些服务，并且平台没有为他们执行负载均衡代理。如何自动配置DNS取决于服务是否定义了选择器。
+
+### 有选择器
+
