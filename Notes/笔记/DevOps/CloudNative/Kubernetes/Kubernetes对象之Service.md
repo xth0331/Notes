@@ -94,9 +94,69 @@ Kubernetes集群中的每个节点都运行一个`kube-proxy`。`kube-proxy`负�
 
 显然，iptables不需要在用户空间和内核空间之间切换，它应该比用户空间代理更快，更可靠。但是，与用户空间代理不同，如果最初选择的那个Pod没有响应，则iptables代理无法自动重试另一个Pod，因为依赖于具有工作准备情况的探针。
 
+![](https://blog-image.nos-eastchina1.126.net/Service-ip.jpg)
+
+
+
+### 代理模式: ipvs
+
+在此模式下，kube-proxy监控Kubernetes Service和Endpoint，调用`netlink`接口以相应地创建ipvs规则并定期与Kubernetes Service和 Endpoint同步ipvs规则，以确保ipvs状态与期望一致。访问Servcie时，流量将被重定向到其中的一个后端Pod。
+
+与iptables类似，ipvs基于netfilter钩子函数，但使用哈希表作为底层数据结构并在内核空间工作。这意味着ipvs可以更快的重定向流量，并且在同步代理规则是具有更好的性能。此外，ipvs为负载均衡算法提供更多选项，例如：
+
+- `rr`: round-robin
+- `lc`: least connection
+- `dh`: destination hashing
+- `sh`: source hashing
+- `sed`: shortest expected delay
+- `nq`: never queue
+
+> ipvs模式假设在运行kube-proxy之前在节点上启用了ipvs内核模块。当kube-proxy以ipvs代理模式启动时，kube-proxy将验证节点上是否启用了ipvs模块，如果未启用，则kube-proxy将回退到iptables模式。
+
 ![](https://blog-image.nos-eastchina1.126.net/Service-iptables.jpg)
 
 在任何这些代理模式中，绑定到`Service`的IP:Port的任何流量都代理到了适当的后端，而客户端不知道有关Kubernetes或`Service`或Pod的任何信息。可以通过将`service.spec.sessionAffinity`设置为`ClientIP`（默认为“None”）来选择基于客户端IP的会话亲和关系，并且可以通过设置字段`service.spec.sessionAffinityConfig.clientIP.timeoutSeconds`来设置最大会话黏连时间。如果已将`service.spec.sessionAffinity`设置为`ClientIP`，则timeout（默认为10800）。
 
 ## Multi-Port Services
+
+许多Service需要暴露一个以上端口。对于这种情况，Kubernetes支持Service对象上的多个端口定义。使用多个端口时，必须提供所有端口名称，以便可以消除端口歧义。例如：
+
+```yaml
+kind: Service
+apiVersion: v1
+metadata: 
+  name: my-service
+spec:
+  selector: 
+    app: Myapp
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 9376
+  - name: https
+    protocol: TCP
+    port: 443
+    targetPort: 9377
+```
+
+注意，端口名称只能包含小写字母，数字和“-”，并且必须以小写字母或数字开头和结尾。
+
+## 选择自己的IP地址
+
+可以将自己的集群IP地址指定为Service创建请求的一部分。为此，设置`.spec.clusterIP`字段。例如，如果已经有一个希望重用的DNS条目，或者为特定IP地址配置并且难以重新配置的旧系统。用户选择的IP地址必须是有效的IP地址，并且在由API服务器指定的`service-cluster-ip-range`CIDR范围内。如果IP地址无效则apiserver返回422状态码以表示该值无效。
+
+### 为什么不适用 round-robin DNS?
+
+一个经常出现的问题是我们为什么用虚拟IP做所有这些事情而不仅仅是使用标准的循环DNS：
+
+- DNS库的历史悠久，不尊重DNS TTL并缓存查询的结果。
+- 许多应用执行DNS查找以此并缓存结果。
+- 即使应用和库进行了适当的重新解析，每个客户端反复重新解析DNS的负载也难以管理。
+
+## 发现服务
+
+Kubernetes支持两种发现`Service`的主要模式 - 环境变量和DNS。
+
+### 环境变量
 
