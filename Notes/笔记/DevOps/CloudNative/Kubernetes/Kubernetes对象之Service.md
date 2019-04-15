@@ -194,5 +194,11 @@ Kubernetes DNS服务器是访问`ExternalName`类型服务的唯一方法。
 
 对于此类服务，未分配 Cluster IP，`kube-proxy`不处理这些服务，并且平台没有为他们执行负载均衡代理。如何自动配置DNS取决于服务是否定义了选择器。
 
-### 有选择器
+### 有selector
+
+对于定义选择器的headless服务，`Endpoint`控制器在API中创建`Endpoint`记录，并修改DNS配置以返回直接指向支持`Service`的Pod的A记录（地址）。
+
+
+
+### 没有 selector
 
