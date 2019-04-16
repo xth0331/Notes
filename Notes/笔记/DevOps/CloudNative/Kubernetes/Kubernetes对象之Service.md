@@ -234,3 +234,4 @@ Kubernetes `ServiceTypes`允许指定所需的服务类型。默认为`ClusterIP
 
 ### LoadBalancer
 
+在支持外部负载均衡器的云供应商上，将类型字段设置为`LoadBalancer`将为服务配置负载均衡器。负载均衡器的时间创建是异步发生的，有关配置的均衡器的信息将发布在`Service`的`.status.loadBalancer`字段中。例如：
