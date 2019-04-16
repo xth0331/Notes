@@ -235,3 +235,25 @@ Kubernetes `ServiceTypes`允许指定所需的服务类型。默认为`ClusterIP
 ### LoadBalancer
 
 在支持外部负载均衡器的云供应商上，将类型字段设置为`LoadBalancer`将为服务配置负载均衡器。负载均衡器的时间创建是异步发生的，有关配置的均衡器的信息将发布在`Service`的`.status.loadBalancer`字段中。例如：
+
+```yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: MyApp
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 9376
+  clusterIP: 10.0.171.239
+  loadBalancerIP: 78.11.24.19
+  type: LoadBalancer
+status:
+  loadBalancer:
+    ingress:
+    - ip: 146.148.47.155
+```
+
