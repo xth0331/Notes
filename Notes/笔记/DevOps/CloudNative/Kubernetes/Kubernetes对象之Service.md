@@ -202,3 +202,35 @@ Kubernetes DNS服务器是访问`ExternalName`类型服务的唯一方法。
 
 ### 没有 selector
 
+对于未定义选择器的headless服务，`Endpoint`控制器不会创建`Endpoint`记录，但是，DNS系统会查找并配置：
+
+- `ExternalName`类型服务的CNAME记录。
+- 所有其他类型的与服务共享名称的任何`Endpoint`的记录。
+
+## 发布服务 - service types
+
+对于应用程序的某些部分（例如前端），可能希望将服务公开给外部（集群外）IP地址。
+
+Kubernetes `ServiceTypes`允许指定所需的服务类型。默认为`ClusterIP`。
+
+`Type`值机器行为是：
+
+- `ClusterIP`：在集群内部IP上公开服务。选择此值使服务之能从集群中访问。它是默认的`ServiceType`。
+- `NodePort`：在每个节点的IP的静态端口上公开服务。将自动创建`NodePort`服务将路由到的`ClusterIP`。可以通过请求`NodeIP:Node:Port`来从集群外部链接`NodePort`服务。
+- `LoadBalancer`：使用云提供商的负载均衡器在外部公开服务。将自动创建外部负载均衡器将路由到的NodePort和ClusterIP服务。
+- `ExternalName`：将服务映射到`ExternalName`字段的内容（例如foo.var.example.com），通过返回带有其值的`CNAME`记录。没有设置任何类型的代理。
+
+### NodePort
+
+如果将类型字段设置为`NodePort`，Kubernetes Master将从`--service-node-port-range`标志指定的范围（默认：30000-32767）分配端口，并且每个节点将代理该端口（相同端口）进入`Service`。该端口将在`Service`的`.spec.ports[*].nodePort`字段中报告。
+
+如果要指定代理端口的特定IP，可以将`kube-proxy`中的`--nodeport-addresses`标志设置为特定的IP块。以逗号分隔的IP块列表（10.0.0.0/8,1.2.3.4/32）用于过滤此节点的本地地址。例如，如果使用标志`--nodeport-addresses=127.0.0.0/8`，kube-proxy将仅为`Node-Port`服务选择loopback接口。`--nodeport-addresses`默认为空，这意味着选择所有可用的接口并符合当前的`NodePort`行为。
+
+如果需要特定的端口，可以在`nodePort`字段中指定一个值，系统将分配该端口，否则API事务将失败（即使需要自己处理可能的端口冲突）。指定的值必须在节点端口范围内。
+
+这使开发人员可以自由地设置自己的负载均衡器，配置Kubernetes不完全支持的环境，甚至直接暴露一个或多个节点的IP地址。
+
+注意，此服务将同时显示为`NodeIP:sepc.ports[*].nodePort`和`.spec.clusterIP:spec.ports[*].port`。（如果设置了kube-porxy中的`--nodeport-addresses`标志，则过滤NodeIP(s)）。
+
+### LoadBalancer
+
