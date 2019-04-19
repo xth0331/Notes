@@ -257,5 +257,4 @@ status:
     - ip: 146.148.47.155
 ```
 
-来自外部负载均衡器的流量将指向后端Pod，具体如何运作取决于云供应商。
-
+来自外部负载均衡器的流量将指向后端Pod，具体如何运作取决于云供应商。某些云提供程序允许指定`loadBalancerIP`。这种情况下，将使用用户指定的`loadBalancerIP`。如果未指定`loadBalancerIP`字段，则会将临时IP分配给`loadBalancer`。如果指定了`loadBalancerIP`但云提供程序不支持该功能，则字段将被忽略。
