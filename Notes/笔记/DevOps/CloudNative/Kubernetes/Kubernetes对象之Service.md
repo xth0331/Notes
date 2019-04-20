@@ -287,4 +287,40 @@ metadata:
 
 第二个注释指定了Pod所用的协议。对于HTTPS和SSL，ELB将期望Pod通过加密连接进行身份验证。
 
-HTTP和HTTPS将选择7层代理：
+HTTP和HTTPS将选择7层代理：ELB将终止与用户的连接，解析header并使用用户的IP地址注入`X-Forwarded-For`header（Pod只会在另一端看到ELB的IP地址）转发请求。
+
+TCP和SSL将选择4层代理：ELB将转发流量而不修改header。
+
+在某些端口收到保护且其他端口未加密的混合使用环境中，可以使用以下注释：
+
+```yaml
+metadata:
+  name: my-service
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443,8443"
+```
+
+在上面的示例中，如果服务包含三个端口，80,443和8443,则443和8443将使用SSL证书，但80将仅代理HTTP。
+
+### ExternalName
+
+`ExternalName`类型的`service`将`service`映射到DNS名称，而不是映射到`my-service`或`cassandra`等典型选择器。可以使用`spec.externalName`参数指定这些`service`。
+
+例如，`service`定义将`prod`namespace中的`my-service`映射到`my.database.example.com`：
+
+```yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: my-service
+  namespace: prod
+spec:
+  type: ExternalName
+  externalName: my.database.example.com
+```
+
+> 注意：ExternalName接受IPv4地址字符串，但是作为由数字组成的DNS名称，而不是IP地址。类似与IPv4地址的ExternalName不会被CoreDNS或ingress-nginx解析，因为ExternalName旨在指定规范的DNS名称。要怼IP地址进行硬编码，请考虑headless服务。
+
+查找主机`my-service.prod.svc.cluster.local`，集群DNS服务将返回值为`my.database.example.com`的CNAME记录。访问`my-service`的工作方式与其他服务的工作方式相同，但重要的区别是重定向发生在DNS级别，而不是通过代理或转发。如果以后决定将数据库移动到集群中，则可以启动其Pod，添加适当的选择器或`endpoint`以及更改服务的类型。
+
