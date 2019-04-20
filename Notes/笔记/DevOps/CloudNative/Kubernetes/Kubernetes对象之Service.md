@@ -324,3 +324,5 @@ spec:
 
 查找主机`my-service.prod.svc.cluster.local`，集群DNS服务将返回值为`my.database.example.com`的CNAME记录。访问`my-service`的工作方式与其他服务的工作方式相同，但重要的区别是重定向发生在DNS级别，而不是通过代理或转发。如果以后决定将数据库移动到集群中，则可以启动其Pod，添加适当的选择器或`endpoint`以及更改服务的类型。
 
+### External IPs
+
