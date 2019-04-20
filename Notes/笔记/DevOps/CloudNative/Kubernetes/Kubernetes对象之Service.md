@@ -326,3 +326,5 @@ spec:
 
 ### External IPs
 
+如果有外部IP路由到一个或多个集群节点，Kubernetes服务可以在那些`externalIP`上公开。
+
