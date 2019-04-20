@@ -258,3 +258,33 @@ status:
 ```
 
 来自外部负载均衡器的流量将指向后端Pod，具体如何运作取决于云供应商。某些云提供程序允许指定`loadBalancerIP`。这种情况下，将使用用户指定的`loadBalancerIP`。如果未指定`loadBalancerIP`字段，则会将临时IP分配给`loadBalancer`。如果指定了`loadBalancerIP`但云提供程序不支持该功能，则字段将被忽略。
+
+#### Internal load balancer
+
+在混合环境中，又是需要从同一VPC内的服务路由流量。
+
+在水平分割DNS环境中，需要两个`service`才能将外部和内部流量路由到`endpoint`。
+
+#### SSL support on AWS
+
+对在AWS上运行的集群上的部分SSL支持，从1.3K开始可以将第三个注释添加到`LoadBalancer`服务：
+
+```yaml
+metadata:
+  name: my-service
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012
+```
+
+第一个指定要使用的证书的ARN。他可以是上载到IAM的第三方颁发者的证书，也可以是AWS Certificate Manager中创建的证书。
+
+```yaml
+metadata:
+  name: my-service
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: (https|http|ssl|tcp)
+```
+
+第二个注释指定了Pod所用的协议。对于HTTPS和SSL，ELB将期望Pod通过加密连接进行身份验证。
+
+HTTP和HTTPS将选择7层代理：
