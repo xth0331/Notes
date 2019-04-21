@@ -326,5 +326,6 @@ spec:
 
 ### External IPs
 
-如果有外部IP路由到一个或多个集群节点，Kubernetes服务可以在那些`externalIP`上公开。
+如果有外部IP路由到一个或多个集群节点，Kubernetes服务可以在那些`externalIP`上公开。在服务端口上使用外部IP（作为目标IP）进入集群的流量将路由到其中一个service endpoint。`externalIP`不由kubernetes管理，是集群管理员的责任。
 
+在`ServiceSpec`中，可以与任何`ServiceType`一直指定`externalIP`。在下面的例子中，客户端可以在`80.11.12.10:80`(`externalIP:port`)上访问`my-service`。
