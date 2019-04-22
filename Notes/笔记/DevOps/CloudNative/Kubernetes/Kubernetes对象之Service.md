@@ -377,3 +377,29 @@ Kubernetes的主要哲学之一是用户不应该暴露于可能导致他们的�
 
 ### IPs and VIPs
 
+与实际路由到固定目的地的PodIP不同，ServiceIP实际上并未由单个主机应答。相反，我们使用iptables来定义根据需要透明重定向的虚拟IP地址。当客户连接到VIP时，其流量会自动传输到适当的endpoint。Service的环境变量和DNS实际上是Service的VIP和端口的填充。
+
+我们支持三种代理模式 - namspeace，iptables和ipvs，它们的运行方式略有不同。
+
+#### Userspace
+
+作为示例，考虑上述图像处理应用程序。 创建后端 `Service` 时,  Kubernetes master 会分配一个虚拟IP地址，如 10.0.0.1. 假设 `Service` 端口是 1234, 集群中的所有`kube-proxy` 实例都会观察到该 `Service` 带代理看到新 `Service`, 他会打开一个新的随机端口，建立从VIP到这个新端口的iptables重定向，并开始接受它上面的连接。
+
+当连接到VIP时，iptables规则启动，将数据包从定向到`service`代理自己的端口。`service`代理选择后端，并开始代理从客户端到后端的流量。
+
+ 这意味着`Service` 所有者可以选择他们想要的任何端口而不会发生冲突。客户端可以简单的连接到IP和端口，而无需知道他们实际访问的是哪些 `Pods` 。
+
+#### Iptables
+
+再次，考虑上述图像处理应用程序。创建后端`Service`  时，Kubernetes master会分配一个虚拟IP，例如，10.0.0.1。假设该`Service`的端口是1234，则集群中的所有`kube-proxy` 实例都会观察到该  `Service`当代理看到新   `Service`时，他会安装一系列iptables规则，这些规则从VIP重定向到每个`Service` 规则，每个`Service`规则连接到每个`Endpoint`规则，该规则将重定向到后端（目的NAT）。
+
+ 当客户端连接到VIP时，iptables规则启动。选择后端（基于会话亲和性或随机），并将数据包重定向到后端。与用户空间代理不同，数据包永远不会复制到用户空间，因此不必运行kube-proxy以使VIP工作，并且不会更改客户端IP。
+
+当流量通过节点端口或通过负载均衡进入时，执行相同的基本流程，但在这种情况下，客户端IP确实会被更改。
+
+
+
+#### Ipvs
+
+Iptables操作在大规模集群中显着放缓，例如10,000个服务。 IPVS旨在实现负载平衡并基于内核中的哈希表。 因此，我们可以从基于IPVS的kube-proxy实现大量服务的性能一致性。 同时，基于IPVS的kube-proxy具有更复杂的负载平衡算法（最小的conns，局部性，加权，持久性）。
+
