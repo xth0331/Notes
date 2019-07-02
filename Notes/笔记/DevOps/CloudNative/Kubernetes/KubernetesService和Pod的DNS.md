@@ -153,3 +153,4 @@ nameserver fd00:79:30::a
 search default.svc.cluster.local svc.cluster.local cluster.local
 options ndots:5
 ```
+
