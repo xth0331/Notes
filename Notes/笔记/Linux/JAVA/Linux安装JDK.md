@@ -79,4 +79,3 @@ export PATH=$PATH:/opt/jdk1.8.0_201/bin:/opt/jdk1.8.0_201/jre/bin
 ```
 
 还要将上述命令添加到`/etc/bashrc`或`/etc/profile`文件中以自动设置环境变量。
-
