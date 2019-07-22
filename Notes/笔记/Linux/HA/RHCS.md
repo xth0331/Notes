@@ -186,14 +186,14 @@ yum makecache
    chkconfig iscsi on   # 开机启动iscsi服务
    iscsiadm -m node -T <IQN1> -p <IP1:PORT> --login				# 登录
    iscsiadm -m node -T <IQN2> -p <IP2:PORT> --login				# 登录
-   iscsiadm -m node -T <IQN1> -p <IP1:PORT> -op update -n node.startup -v automatic	# 自动登录
-   iscsiadm -m node -T <IQN2> -p <IP2:PORT> -op update -n node.startup -v automatic	# 自动登录
+   iscsiadm -m node -T <IQN1> -p <IP1:PORT> --op update -n node.startup -v automatic	# 自动登录
+   iscsiadm -m node -T <IQN2> -p <IP2:PORT> --op update -n node.startup -v automatic	# 自动登录
    ```
 
 3. 生成`/etc/multipath.conf`
 
    ```bash
-   multipath --enable --with_multipathd y
+   mpathconf --enable --with_multipathd y
    ```
 
 4. 启动`multipathd`服务
