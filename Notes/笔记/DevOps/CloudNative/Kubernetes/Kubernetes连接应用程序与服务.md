@@ -61,3 +61,42 @@ kubectl get pods -l run=my-nginx -o yaml | grep podIP
 
 现在能够在集群中的任何节点并curl两个IP。注意，容器没有在节点上使用端口80，也没有任何特殊的NAT规则量流量路由到Pod。这意味着可以在同一个节点上运行多个nginx Pod，所有这些POd都是用相同的containerPort，并使用IP从集群中的任何其他Pod或节点访问它们。与Docker一样，端口仍然可以发布到主机节点的接口，但是由于网络模型的存在，对端口的需求已经大大减少。
 
+## 创建 Service
+
+我们有Pod在一个扁平的、集群范围的地址空间中运行Nginx服务，可以直接连接到这些Pod，但如果某个节点死掉了会发生什么呢？Pod会终止，`Deployment`将创建新的Pod，且使用不同的IP。这正是`Service`要解决的问题。
+
+Kubernetes Service从逻辑上定义了运行在集群中的一组Pod，这些Pod提供了了相同的功能。当每个`Service`创建时，会被分配一个唯一的IP地址（也成为`clusterIP`）。这个IP地址与一个`Service`的生命周期绑定在一起，当`Service`存在的时候它也不会改变。可以配置Pod使它与`Service`进行通信，Pod知道与`Service`通信将被自动地负载均衡到该`Service`中的某些Pod上。
+
+可以使用`kubectl expose`命令为2个Nginx副本创建一个`Service`：
+
+```bash
+kubectl expose deployment/my-nginx
+```
+
+ 这等价于使用`kubectl create -f` 命令创建，对应如下的yaml文件：
+
+```yaml
+appiVersion: v1
+kind: Servvice
+metadata: 
+  name: my-nginx
+  labels: 
+    run: my-nginx
+spec:
+  ports:
+  - port: 80 
+    protocol: TCP
+  selector:
+    run: my-nginx
+```
+
+将创建一个`Sercice`,对应具有标签`run: my-nginx`的Pod，目标TCP端口80，并且在一个抽象的`Service`端口（targetPort：容器接收流量的端口；`port`: 抽象的Service端口，可以使任何其他Pod访问该Service端口）上暴露。
+
+```bash
+kubectl get svc my-nginx
+NAME           CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+my-nginx   10.0.162.149       <none>              80/TCP    21s
+```
+
+正如前面所提到的，一个`Service`由一组backend Pod组成。这些Pod通过`endpoints`暴露出来。`Service Selector`将持续评估，结果被POST到一个名称为`my-nginx`的EndPoint对象上。当Pod终止后，它会自动从Endpoint中移除，
+
