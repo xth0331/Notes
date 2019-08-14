@@ -46,17 +46,18 @@ kubectl get pods -l run=my-nginx -o wide
 ```
 
 ```bash
-NAME                        READY   STATUS    RESTARTS   AGE    IP             NODE                    NOMINATED NODE   READINESS GATES
-my-nginx-86459cfc9f-lp5n5   1/1     Running   0          4m2s   192.168.0.58   localhost.localdomain   <none>           <none>
-my-nginx-86459cfc9f-t2zpp   1/1     Running   0          4m2s   192.168.0.59   localhost.localdomain   <none>           <none>
+NAME                        READY   STATUS    RESTARTS   AGE     IP            NODE               NOMINATED NODE
+my-nginx-65cd4c89f8-2ccbp   1/1     Running   0          2m43s   10.244.4.44   kubernetes-node5   <none>
+my-nginx-65cd4c89f8-nnq7s   1/1     Running   0          2m43s   10.244.2.27   kubernetes-node3   <none>
+
 ```
 
 检查Pod的IP：
 
 ```bash
 kubectl get pods -l run=my-nginx -o yaml | grep podIP
-	podIP: 192.168.0.58
-	podIP: 192.168.0.59
+	podIP: 10.244.4.44
+	podIP: 10.244.2.27
 ```
 
 现在能够在集群中的任何节点并curl两个IP。注意，容器没有在节点上使用端口80，也没有任何特殊的NAT规则量流量路由到Pod。这意味着可以在同一个节点上运行多个nginx Pod，所有这些POd都是用相同的containerPort，并使用IP从集群中的任何其他Pod或节点访问它们。与Docker一样，端口仍然可以发布到主机节点的接口，但是由于网络模型的存在，对端口的需求已经大大减少。
@@ -98,5 +99,44 @@ NAME           CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
 my-nginx   10.0.162.149       <none>              80/TCP    21s
 ```
 
-正如前面所提到的，一个`Service`由一组backend Pod组成。这些Pod通过`endpoints`暴露出来。`Service Selector`将持续评估，结果被POST到一个名称为`my-nginx`的EndPoint对象上。当Pod终止后，它会自动从Endpoint中移除，
+正如前面所提到的，一个`Service`由一组backend Pod组成。这些Pod通过`endpoints`暴露出来。`Service Selector`将持续评估，结果被POST到一个名称为`my-nginx`的EndPoint对象上。当Pod终止后，它会自动从Endpoint中移除，新的能够匹配上Service Selector的Pod将自动地被添加到Endpoint中。检查该Endpoint，注意到IP地址与在第一步创建的Pod是相同的。
+
+```bash
+kubectl describe svc my-nginx
+Name:              my-nginx
+Namespace:         default
+Labels:            <none>
+Annotations:       <none>
+Selector:          run=my-nginx
+Type:              ClusterIP
+IP:                10.97.222.245
+Port:              <unset>  80/TCP
+TargetPort:        80/TCP
+Endpoints:         10.244.2.27:80,10.244.4.44:80
+Session Affinity:  None
+Events:            <none>
+```
+
+```bash
+kubectl get ep my-nginx
+NAME       ENDPOINTS                       AGE
+my-nginx   10.244.2.27:80,10.244.4.44:80   13m
+```
+
+现在，能够从集群中任意节点上使用`curl`命令请求Nginx Service `<CLUSTER-IP>:<PORT>`。注意Service IP是完全是虚拟的，它从来没有走过网络。
+
+## 访问Service
+
+Kubernetes支持两种主要的服务 —— 环境变量和DNS 。 前者在单个节点上可以使用，然后后者必须使用`kube-dns`集群插件。
+
+### 环境变量
+
+ 当Pod在Node上运行时，`kubectl`会为每个活跃的Service添加一组环境变量。这会有一个顺序的问题。想了解如何，检查正在运行的Nginx Pod的环境变量（Pod名称将不会相同）：
+
+```bash
+kubectl exec my-nginx 
+KUBERNETES_SERVICE_HOST=10.96.0.1
+KUBERNETES_SERVICE_PORT=443
+KUBERNETES_SERVICE_PORT_HTTPS=443
+```
 
