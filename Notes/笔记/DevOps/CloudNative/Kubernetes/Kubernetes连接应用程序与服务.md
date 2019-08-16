@@ -200,10 +200,162 @@ Address 1: 10.111.75.123 my-nginx.default.svc.cluster.local
 示例如下：
 
 ```bash
-git clone https://github.com/kubernetes/examples
-cd examples/staging/https-nginx
-make keys KEY=/tmp/nginx.key CERT=/tmp/nginx.crt
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /tmp/nginx.key -out /tmp/nginx.crt -subj "/CN=my-nginx/O=my-nginx"
+#convert the keys to base64 encoding
+cat /tmp/nginx.crt | base64
+cat /tmp/nginx.key | base64
+```
 
+使用base64编码：
+
+**nginxsecrets.yaml:**
+
+```yaml
+apiVersion: "v1"
+kind: "Secret"
+metadata:
+  name: "nginxsecret"
+  namespace: "default"
+data:
+  nginx.crt: 
+  nginx.key: 
+```
+
+现在使用这个文件创建secrets：
+
+```bash
+kubectl apply -f nginxsecrets.yaml
+kubectl get secrets
+```
+
+ 
+
+现在修改Nginx副本，启动一个使用的秘钥中的证书https服务器和Service，都暴露端口（80,443）：
+
+**nginx-secure-app.yaml:**
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-nginx
+  labels:
+    run: my-nginx
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    targetPort: 80
+    protocol: TCP
+    name: http
+  - port: 443
+    protocol: TCP
+    name: https
+  selector:
+    run: my-nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-nginx
+spec:
+  selector:
+    matchLabels:
+      run: my-nginx
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: my-nginx
+    spec:
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: nginxsecret
+      containers:
+      - name: nginxhttps
+        image: bprashanth/nginxhttps:1.0
+        ports:
+        - containerPort: 443
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /etc/nginx/ssl
+          name: secret-volume
+```
+
+关于 nginx-secure-app 值得注意的点如下：
+
+- 它在相同的文件中包含了`Deployment`和`Service`。
+- Nginx server处理80端口上的http流量，以及443端口上的https流量，Nginx Service暴露了这两个端口。
+- 每个容器访问挂载在`/etc/nginx/ssl`卷上的秘钥。这需要在Nginx server启动之前安装好。
+
+
+
+```bash
+kubectl delete deployments,svc my-nginx; kubectl create -f 
+```
+
+这时可以从任何节点访问到Nginx server。
+
+```bash
+kubectl get pods -o yaml | grep -i podip
+  podIP: 10.244.6.11
+```
+
+让我们从一个Pod来测试，
+
+```yaml
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: curl-deployment
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: curlpod
+    spec:
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: nginxsecret
+      containers:
+      - name: curlpod
+        command:
+        - sh
+        - -c
+        - while true; do sleep 1; done
+        image: radial/busyboxplus:curl
+        volumeMounts:
+        - mountPath: /etc/nginx/ssl
+          name: secret-volume
+```
+
+```bash
+kubectl create -f curlpod.yaml
+kubectl get pods -l app=curlpod
+NAME                               READY   STATUS    RESTARTS   AGE
+curl-deployment-64db69f646-rzrkd   1/1     Running   0          24m
+```
+
+进入Pod
+
+```bash
+kubectl exec curl-deployment-64db69f646-rzrkd -- curl https://my-nginx --cacert /etc/nginx/ssl/nginx.crt
+```
+
+### 保留Service
+
+对于我们应用的某些部分，可能希望将Service暴露在一个外部IP地址上。Kubernetes支持两种实现方式： `NodePort`和`LoadBalancer`。在上一段创建的Service使用了`NodePort`，因此Nginx https副本已经就绪，如果使用一个公网Ip，能够处理Internet上的流量。
+
+```bash
+kubectl get svc my-nginx -o yaml  | grep nodePort -C 5
+kubectl get svc my-nginx -o yaml | grep ExternalIP -C 1
 
 ```
+
+创建一个Service使用一个云负载均衡器，只需要将`my-nginx`Service的``Type`由`NodePort`改为`LoadBalancer`。
+
+在`EXTERNAL-IP`列指定的IP地址是在公网上可用的。`CLUSTER-IP`只在集群/私有云网络中可用。
 
