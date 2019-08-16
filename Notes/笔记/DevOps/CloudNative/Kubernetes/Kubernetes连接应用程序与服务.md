@@ -140,3 +140,70 @@ KUBERNETES_SERVICE_PORT=443
 KUBERNETES_SERVICE_PORT_HTTPS=443
 ```
 
+注意，还没有谈及到Service。这是因为创建副本先于Service。这样做的另一个缺点是，调度器可能同一个机器上放置所有Pod，如果该机器宕机则所有的Service都会挂掉。正确的做法是，我们杀掉2个Pod，等待Deployment去创建它们。这次Service会先于副本存在。这将实现调度器级别的Service，能够使Pod分散创建（假定所有的Node都具有同样的容量），以及正确的环境变量：
+
+```bash
+kubectl scale deployment my-nginx --replicas=0; kubectl scale deployment my-nginx --replicas=2
+kubectl get pods -l run=my-nginx -o wide
+NAME                        READY   STATUS    RESTARTS   AGE   IP            NODE     NOMINATED NODE   READINESS GATES
+my-nginx-796694855f-85zkj   1/1     Running   0          38s   10.244.7.9    node07   <none>           <none>
+my-nginx-796694855f-rb7zz   1/1     Running   0          38s   10.244.6.10   node06   <none>           <none>
+```
+
+可能注意到，Pod具有不同的名称，因为它们被杀掉后并被重新创建。
+
+```bash
+kubectl exec my-nginx-796694855f-rb7zz -- printenv | grep SERVICE
+KUBERNETES_SERVICE_PORT=443
+MY_NGINX_SERVICE_HOST=10.111.75.123
+KUBERNETES_SERVICE_HOST=10.96.0.1
+KUBERNETES_SERVICE_PORT_HTTPS=443
+MY_NGINX_SERVICE_PORT=80
+```
+
+### DNS
+
+Kubernetes提供了一个DNS插件Service，它使用skyedns自动为其它Service指派DNS名字。如果它在集群中处于运行状态，可以通过如下命令检查：
+
+```bash
+kubectl get services kube-dns --namespace=kube-system
+NAME       TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)                  AGE
+kube-dns   ClusterIP   10.96.0.10   <none>        53/UDP,53/TCP,9153/TCP   23h
+```
+
+假设已经有一个Service，它具有一个长久存在的IP（my-nginx），一个为该IP指派名称的DNS服务器（kube-dns集群插件），所以可以通过标准做法，使在集群中的任何Pod都能与该Service通信（例如：gethostbyname）。让我们运行另一个curl来进行测试：
+
+```bash
+kubectl run curl --image=radial/busyboxplus:curl -i --tty
+
+```
+
+然后，按回车并执行`nslookup my-nginx`:
+
+```bash
+nslookup my-nginx
+Server:    10.96.0.10
+Address 1: 10.96.0.10 kube-dns.kube-system.svc.cluster.local
+
+Name:      my-nginx
+Address 1: 10.111.75.123 my-nginx.default.svc.cluster.local
+```
+
+### Service 安全
+
+到现在为止，我们值在集群内部访问了Nginx Service。在将Service暴露到Internet之前，我们希望确保通信信道是安全的，对于这可能需要：
+
+- https自签名证书（除非已有了一个识别身份的证书）
+- 使用证书配置的Nginx Service
+- 证书可以访问Pod的秘钥
+
+示例如下：
+
+```bash
+git clone https://github.com/kubernetes/examples
+cd examples/staging/https-nginx
+make keys KEY=/tmp/nginx.key CERT=/tmp/nginx.crt
+
+
+```
+
