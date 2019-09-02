@@ -67,3 +67,27 @@ spec:
           servicePort: 80
 ```
 
+与所有其他Kubernetes资源一样，一个`Ingress`需要`apiVersion`,`kind`和`metadata`字段。`Ingress`经常使用注释来配置一些选项，具体取决于`Ingress controller`，其中一个例子是`rewrite-target `。不通的`Ingress controller`支持不同的注释。
+
+`Ingress`规范（spec）包含配置负载均衡或代理服务器的所有信息。最重要的是，它包含一个针对所有传入请求匹配的规则列表。`Ingress`资源仅支持HTTP流量的规则。
+
+### Ingress 规则
+
+每个HTTP规则都包含一下信息：
+
+- 可选主机。在此示例中，未指定主机，因此该规则使用与通过指定的IP地址的所有入站HTTP流量。如果提供了主机（例如，foo.bar.com），则规则适用于该主机。
+- 路径列表（例如 /testpath），每个路径都有一个用`serviceName`和定义的关联后端的`servicePort`。在负载均衡器将流量定向到引用的`service`之前，主机和路径都必须与传入请求的内容匹配。
+- 后端是`service`和端口名称的组合。向`Ingress`发出的与主机和规则路径匹配的HTTP（和HTTPS）请求将发送到列出的后端。
+
+默认后端通常在`Ingress`控制器中配置，以便为与规范中的路径不匹配的任何请求提供服务。
+
+
+
+### 默认后端
+
+没有规则的`Ingress`将所有流量发送到单个默认后端。默认后端通常是`Ingress controller`的配置选项，并且未在`Ingress`资源中指定。
+
+如果没有任何主机或路径与`Ingress`对象中的HTTP请求匹配，则流量量路由到默认后端。
+
+## Ingress 类型
+
