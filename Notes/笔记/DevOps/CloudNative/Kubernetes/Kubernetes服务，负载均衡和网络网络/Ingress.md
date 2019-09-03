@@ -91,3 +91,100 @@ spec:
 
 ## Ingress 类型
 
+### Single Service Ingress
+
+现在的Kubernetes概念允许公开单个`Service`。也可以通过指定没有规则的默认后端来使用`Ingress`执行此操作。
+
+```yaml
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: test-ingress
+spec:
+  backend:
+    serviceName: testsvc
+    servicePort: 80
+```
+
+
+
+如果使用`kubectl apply -f `创建，能够查看刚刚添加的`Ingress`状态。
+
+```bash
+kubectl get ingress test-ingress
+```
+
+
+
+### Simple fanout
+
+一个fanout配置根据请求的HTTP URL 将流量从单个IP地址路由到多个服务，基于请求的HTTP URL。一个`Ingress`允许将负载均衡器的数量降到最低。例如，
+
+```bash
+foo.bar.com -> 178.91.123.132 -> / foo    service1:4200
+                                 / bar    service2:8080
+```
+
+需要一个这样的`Ingress`例如：
+
+```yaml
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: simple-fanout-example
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: foo.bar.com
+    http:
+      paths:
+      - path: /foo
+        backend:
+          serviceName: service1
+          servicePort: 4200
+      - path: /bar
+        backend:
+          serviceName: service2
+          servicePort: 8080
+```
+
+使用`kubectl apply -f`命令创建`Ingress`:
+
+```bash
+kubectl describe ingress simple-fanout-example
+```
+
+```bash
+Name:             simple-fanout-example
+Namespace:        default
+Address:          178.91.123.132
+Default backend:  default-http-backend:80 (10.8.2.3:8080)
+Rules:
+  Host         Path  Backends
+  ----         ----  --------
+  foo.bar.com
+               /foo   service1:4200 (10.8.0.90:4200)
+               /bar   service2:8080 (10.8.0.91:8080)
+Annotations:
+  nginx.ingress.kubernetes.io/rewrite-target:  /
+Events:
+  Type     Reason  Age                From                     Message
+  ----     ------  ----               ----                     -------
+  Normal   ADD     22s                loadbalancer-controller  default/test
+```
+
+只要服务(service1,service2)存在，`Ingress`控制器就会提供满足`Ingress`的特定于实现的负载均衡器。完成后，可以在地址字段查看负载均衡的地址。
+
+> 注意：根据使用的Ingress控制器，可能需要创建default-http-backend服务。
+
+### 基于名称的虚拟主机
+
+基于名称的虚拟主机支持将HTTP流量路由到统一IP地址的多个主机名。
+
+```bash
+foo.bar.com --|                 |-> foo.bar.com service1:80
+              | 178.91.123.132  |
+bar.foo.com --|                 |-> bar.foo.com service2:80
+```
+
