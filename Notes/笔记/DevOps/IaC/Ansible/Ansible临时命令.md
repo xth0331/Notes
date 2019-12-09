@@ -24,5 +24,19 @@ ansible [pattern] -m [module] -a "[module opetions]"
 ansible atlanta -a "/sbin/reboot"
 ```
 
+默认情况下,Ansible仅使用5个并发进程.如果拥有主机数量超过为派生计数设置的值,会花费一些时间。要使用10个并发分支重新启动[atlanta]服务器组,请执行以下操作:
+
+```bash
+ansible atlanta -a "/sbin/reboot" -f 10 
+```
+
+`/usr/bin/ansible`将默认从您的用户账户运行.要以其他我身份连接:
+
+```bash
+ansible atlanta -a "/sbin/reboot" -f 10 -u username
+```
+
+重新引导可能需要特权升级.可以使用以下关键字变为用户身份连接到服务器,并使用`become`关键字作为`root`用户运行该命令。
+
 
 

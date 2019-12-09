@@ -12,7 +12,7 @@
    行尾：<kbd>Ctrl</kbd> + <kbd>End</kbd>
 5. 撤销光标移动和选择
    <kbd>Ctrl</kbd> + <kbd>U</kbd>
-
+ 
 ## 文本选择
 1. 针对单词的光标选择
    <kbd>Ctrl</kbd> + <kbd>方向键</kbd>
