@@ -111,3 +111,48 @@ Ansible具有用于在许多平台下管理软件包的模块。如果您的软�
 
 ### 管理用户和组
 
+可以使用临时任务在受管节点上创建,管理和删除用户账户:
+
+```bash
+ansible all -m user -a "name=foo password=<crypted password here>"
+ansible all -m user -a "name=foo state=absent"
+```
+
+> 生成加密密码可以使用ansible:
+>
+> *注释: 虚将获取的密文放入playbook,明文传入不生效*
+>
+> ```bash
+> ansible localhost -m debug -a "msg={{ 'mypassword' | password_hash('sha512', 'mysecretsalt') }}"
+> ```
+
+### 服务管理
+
+确保所有Web服务器上启动了服务：
+
+```bash
+ansible centos -m service -a "name=nginx state=started"  
+```
+
+或者,重启所有`nginx`服务:
+
+```bash
+ansible centos -m service -a "name=nginx state=restarted"
+```
+
+确保所有服务已停止:
+
+```bash
+ansible centos -m service -a "name=nginx state=stopped"
+```
+
+###  收集facts
+
+`facts`代表发现的有关系统的变量。可以使用`facts`来实现任务的有条件执行,也可以获取有关系统的临时信息。要查看所有`facts`：
+
+```bash
+ansible centos -m setup
+```
+
+也可以过滤输出,仅显示某些`facts`。
+
