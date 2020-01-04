@@ -92,5 +92,24 @@ packer build -
 -color             -debug             -except            -force             -machine-readable  -on-error          -only              -parallel          -timestamp          -var               -var-file
 ```
 
+## `build`
 
+`packer build`命令获取一个模板并运行其中的所有构建，以生成一组工件，除非另有说明，否则在模板内指定的各种内部版本将并行执行。创建的工件在构建结束时输出。
+
+### 选项
+
+- [`-color=false`](https://www.packer.io/docs/commands/build.html#color-false) - 禁用彩色的输出，默认启用。
+- [`-debug`](https://www.packer.io/docs/commands/build.html#debug) - 禁用并行化并启用调试模式。 调试模式标记构建器它们应该输出调试信息。 调试模式的确切行为留给了构建器。 通常，构建器通常会在每个步骤之间停止，等待键盘输入再继续。 这将允许用户检查状态等。
+- [`-except=foo,bar,baz`](https://www.packer.io/docs/commands/build.html#except-foo-bar-baz) - 运行所有的构建和后处理程序，除了那些使用逗号分隔的名称的构建和后处理程序。默认情况下，构建和后处理器名称是它们的类型，除非在配置中指定了特定的name属性。跳过后处理器之后的任何后处理器都不会运行。因为后处理器可以嵌套在数组中，所以仍然可以运行不同的后处理器链。具有空名称的后处理器将被忽略。
+- [`-force`](https://www.packer.io/docs/commands/build.html#force) - 当来自先前构建的构件阻止构建运行时，强制构建器运行。强制构建的确切行为留给构建者。通常，支持强制构建的构建器将从以前的构建中删除构件。这将允许用户重复构建，而不必预先手动清理这些工件。
+- [`-on-error=cleanup`](https://www.packer.io/docs/commands/build.html#on-error-cleanup) (default), `-on-error=abort`, `-on-error=ask` - 选择构建失败时要做什么. `cleanup` 在完成上述步骤后进行清理，删除临时文件和虚拟机. `abort` 没有进行任何清理就退出，这可能需要下一次构建才能使用 `-force`. `ask` 出现提示并等待您决定清理，中止或重试失败的步骤.
+- [`-only=foo,bar,baz`](https://www.packer.io/docs/commands/build.html#only-foo-bar-baz) - 仅使用给定的逗号分隔的名称运行构建. 默认情况下，构建名称是它们的类型，除非在配置中指定了特定的`name`属性。 `-only` 不适用于 post-processors.
+- [`-parallel-builds=N`](https://www.packer.io/docs/commands/build.html#parallel-builds-n) - 限制要并行运行的内部版本数，0表示没有限制（默认为0）。
+- [`-timestamp-ui`](https://www.packer.io/docs/commands/build.html#timestamp-ui) - 使用RFC3339时间戳为每个ui输出启用前缀。
+- [`-var`](https://www.packer.io/docs/commands/build.html#var) - 在Packer程序模板中设置一个变量。 此选项可以多次使用。 这对于设置内部版本号很有用。
+- [`-var-file`](https://www.packer.io/docs/commands/build.html#var-file) - 从文件中设置模板变量。
+
+
+
+## `console`选项
 
