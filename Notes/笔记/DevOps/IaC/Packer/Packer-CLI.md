@@ -113,3 +113,140 @@ packer build -
 
 ## `console`选项
 
+`packer console`命令允许尝试使用Packer变量。可以在调用控制台的Packer配置中访问变量，也可以在使用`-var` 或`-var-file`命令行选项中调用控制台时提供变量。
+
+键入插值进行测试，然后按<kbd>Enter</kbd> 或使用<kbd>Control</kbd> + <kbd>C</kbd>
+
+```bash
+packer console my_template.json
+```
+
+控制台命令将接受的选项的完整列表在帮助输出中可见，可以通过`packer console -h`看到。
+
+### 选项 
+
+- `-var` 在冲中模板中设置一个变量。此选项可以多次使用。这对于设置内部版本很有用。例如：`-var “myvar=asf”`
+- `-var-file`  从文件中设置模板变量。例如： `-var-file myvars.json`
+
+### 使用示例
+
+假设使用Packer模板`example_template.json`启动控制台:
+
+```bash
+packer console example_template.json
+```
+
+将进入提示，允许输入模板函数并查看它们。例如，如果变量在`example_template`的变量部分中定义：
+
+```json
+"variables":{
+    "myvar": "asdfasdf"
+},
+...
+```
+
+然后{{user `myvar`}}在Packer console中输入，将看到`myvar`的值：
+
+```json
+> {{user `myvar`}}
+> asdfasdf
+```
+
+从那里您可以测试更复杂的插值：
+
+```
+> {{user `myvar`}}-{{timestamp}}
+> asdfasdf-1559854396
+```
+
+使用完控制台后，只需键入“exit”或CTRL-C
+
+```bash
+> exit
+$
+```
+
+如果要提供变量或变量文件，请执行以下操作：
+
+```bash
+packer console -var "myvar=fdsafdsa" -var-file myvars.json example_template.json
+```
+
+如果您没有要测试的特定变量或var文件，而只想尝试使用特定的模板引擎，则可以通过简单地调用`packer console`而无需模板文件来进行操作。
+
+如果您只想查看特定的单个插值而不启动REPL，则可以通过将字符串回显并将其传递到控制台命令中来实现：
+
+```bash
+echo {{timestamp}} | packer console
+1559855090
+```
+
+## `fix`命令
+
+`packer fix`命令采用一个模板，找到向后不兼容的部分， 并使其更新，所以它可以适用于最新版本的Packer。更新到新版的Packer后，应该运行fix命令还确保模板与新版本是否兼容。
+
+`fix`命令将已更改的模板输出为标准输出，因此如果想要保存到文件中，则应使用特定于标准操作系统的重定向。例如，LInux上，需要执行以下操作：
+
+```bash
+packer fix old.json > new.json
+```
+
+如果由于任何原因修复失败，则fix命令将以非0退出状态退出。错误消息出现在标准错误上，因此如果重定向输出，仍会看到错误消息。
+
+### 选项
+
+- `-validate=false` =禁用对固定模板的验证。默认为`True`。
+
+## `inspect`命令
+
+`packer inspect`命令接受一个模板并输出定义的各种组件。这可以帮助快速了解模板，而不必深入了解JSON本身。该命令将告诉告诉您模板接受哪些变量，定义哪些构建器、它定义的`provisioner`以及它们运行的顺序等。
+
+当启用机器可读输出时，此命令特别有用。该命令以机器可解析的方式输出。
+
+不会验证各个组件的实际配置，但是会根据需要验证模板语法。
+
+### 例子
+
+给定一个基本模板，下面是一个输出示例：
+
+```bash
+packer inspect template.json
+Variables and their defaults:
+
+  aws_access_key =
+  aws_secret_key =
+
+Builders:
+
+  amazon-ebs
+  amazon-instance
+  virtualbox-iso
+
+Provisioners:
+
+  shell
+```
+
+## `validate`命令
+
+`packer validate`命令用于验证模板的语法和配置。该命令将在成功时返回0的退出状态码，在失败时返回非0。此外，如果模板没有验证，则将输入错误消息。
+
+例如：
+
+```bash
+packer validate my-template.json
+Template validation failed. Errors are shown below.
+
+Errors validating build 'vmware'. 1 error(s) occurred:
+
+* Either a path or inline script must be specified.
+```
+
+### 选项
+
+- `-syntax-only` 仅检查模板的语法。
+- `-except=foo,bar,vaz` 生成所有带有给定逗号分隔名称的构建和`post-processors`，除了那些用逗号分隔的名称是它们的构建器名称，除非在配置中指定了特定的`name`属性。具有空名称的`post-processor`将被忽略。
+- `-only=foo,bar,baz`  仅使用给定的逗号分隔的名称构建构建 默认情况下,构建名称是它们的构建器的名称,除非在配置中指定了特定的name属性。
+- `-var` 在packer程序模板中设置一个变量。此选项可以使用多次，这对于设置内部版本很有用。
+- `-var-file`  从文件中设置模板变量。
+
