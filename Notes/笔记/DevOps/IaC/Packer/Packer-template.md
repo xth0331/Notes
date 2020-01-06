@@ -101,5 +101,27 @@ Packer中的每个build都有一个名称。默认情况下，名称只是所使
   - `ssh` - 将与计算机建立SSH连接。这通常是默认设置。
   - `winrm` - 将建立WinRM连接。
 
+  除了上述内容以外，某些构建器还具有可以使用的自定义通信器。例如，`docker`构建器有一个`docker`通信器，该通信器使用`docker exec `和`docker cp`执行脚本和文件复制。
   
+- `pause_before_connecting`（持续时间字符串|例如：“1h5m2s”）- 我们建议在客户端的引导脚本最后一步启用SSH或WinRM，但时有时可能遇到竞争，需要Packer等待尝试连接到guest。
+
+  如果最终要到这种情况，可以使用模板`template`的`pause_before_connecting`。默认情况下，没有暂停，例如：
+
+  ```json
+  {
+      "communicator": "ssh",
+      "ssh_username": "myuser",
+      "pause_before_connecting": "10m"
+    }
+  ```
+
+  在此示例中，Packer将正常检测其是否可以连接。但是，一旦连接尝试成功，它将断开连接，然后等待十分钟，然后再连接到guest并开始配置。
+
+### 准备使用通信器
+
+根据构建器的不同，通信器可能无法具备 **开箱即用**工作所需的全部功能。
+
+如果是从云映像构建的（例如，在Amazon上构建），那么云提供商很有可能有经在映像上预先配置了SSH，这意味着要做的就是在Packer模板配置通信器。
+
+
 
