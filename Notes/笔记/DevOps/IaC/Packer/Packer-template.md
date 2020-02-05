@@ -154,5 +154,140 @@ Packer中的每个build都有一个名称。默认情况下，名称只是所使
 -  `replace_all` - (old, new string, s)  RepliceAll返回字符串s的副本，其中旧的所有非重叠实例都被new替换。
 -  `split` - 使用分隔符分隔分割输入字符并返回请求的子字符串。
 -  `template_dir` - 构建模板的目录。
--  
+-  `timestamp` - 当前UTC Unix时间戳。
+-  `uuid` - 返回随机的UUID。
+-  `upper` - 将字符串大写。
+-  `user` - 指定用户变量。
+
+### 模板变量
+
+模板变量是Packer在构建时自动设置的特殊变量。一些构建器，预配器和其他组件具有仅可用于该组件的模板变量。模板变量是可识别的，因为它们以`.`为前缀，例如`{{ .Name }}`，在使用shell构建器模板时，可使用变量来自定义`execute_command`用于确定Packer将如何运行shell命令的参数。
+
+```json
+{
+    "provisioners": [
+        {
+            "type": "shell",
+            "execute_command": "{{.Vars}} sudo -E -S bash '{{.Path}}'",
+            "scripts": [
+                "scripts/bootstrap.sh"
+            ]
+        }
+    ]
+}
+```
+
+在`{{ .Vars }}`和`{{ .Path }}`模板变量将环境变量列表和路径被分别执行的脚本来代替。
+
+## 模板Post-processors
+
+模板中的后处理部分配置将对构建器构建的图像执行的任何后处理。后处理的示例将是压缩文件，上传工件等。
+
+后处理器是可选的。如果模板中未定义任何后处理器，则将不对图像进行任何后处理。生成的结果工件只是生成器输出的图像。
+
+在模板中，后处理器定义的一部分如下所示：
+
+```json
+{
+  "post-processors": [
+    // ... one or more post-processor definitions here
+  ]
+}
+```
+
+对于每个后处理器定义，Packer将获取每个已定义构建器的结果，并将其通过后处理器发送。这意味着，如果在模板中定义了一个后处理器，并且定义了两个构建器，则默认情况下，后处理器将运行两次（每个构建器一次）。如果愿意，有一些方法将在以后介绍，以控制构建器后处理器适用于什么。也可以防止后处理器运行。
+
+### 后处理器定义
+
+在`post-processors`模板的数组内，有三种方法定义后处理器。有简单的定义，详细的定义和序列定义。对比进行考虑的另一种方式，“简单”和“详细”定义是“序列”定义的快捷方式。
+
+一个**简单的定义**就是一个字符串。后处理器的名称。一个例子如下所示。当后处理器不需要其他配置时，将使用简单定义。
+
+```json
+{
+    "post-processors": ["compress"]
+}
+```
+
+详细定义是JSON对象。它与构建者或供应者的定义非常相似。它包含一个`type`表示后处理器类型的字段，但也可能包含后处理器的其他配置。当需要除后处理器类型以外的其他配置时，使用详细定义。一个例子如下所示。
+
+```json
+{
+  "post-processors": [
+    {
+      "type": "compress",
+      "format": "tar.gz"
+    }
+  ]
+}
+```
+
+序列定义有其他简单或详细定义组成的JSON数组。数组中定义的后处理器按顺序运行，每个后处理器的工件被输入下一个后处理器，任何中间工件都被丢弃。一个序列定义可能不包含另一个序列定义。序列定义用于将多个后处理器连接在一起。下面显示了一个示例，其中对构建的工件进行了压缩，然后上传，但是没有保留压缩后的结果。
+
+```json
+{
+  "post-processors": [
+    [
+      "compress",
+      { "type": "upload", "endpoint": "http://example.com" }
+    ]
+  ]
+}
+```
+
+您可能会想到，简单的和详细的只是一个元素的序列定义的一种快捷方式。
+
+### 输入工件
+
+当使用后处理器是，输入工件（来自一个构建器或另一个后处理器）在后处理器运行后被默认丢弃。这是因为通常默认情况下，不希望中间工件在成为最终工件的过程中被创建。
+
+但是，某些情况下，可能需要保留中间工件。可以通过将`keep_input_artifact`设置为`true`来告诉`Packer`保留这些工件。下面是一个示例。
+
+```json
+{
+  "post-processors": [
+    {
+      "type": "compress",
+      "keep_input_artifact": true
+    }
+  ]
+}
+```
+
+此设置将仅将输入工件保留到该特定的后处理器。如果指定后处理器的序列，则默认情况下将丢弃所有中间，但后处理器的输入工件除外，后者明确声明要保留工件。
+
+### 在特定版本上运行
+
+可以使用`only`或`except`字段仅针对特定内部版本运行后处理器。这两个字段符合期望：仅将在指定的内部版本上运行后处理器，而除了将在指定的内部版本上运行后处理器。一系列后处理器，直到跳过最后一个后处理器位置。
+
+下面显示了`only`被使用的示例,但`except`的用法实际上是相同的。`only`和`except`只能在详细字段中指定。如果要运行一个后处理器序列，则`only`和`except`将影响该后处理器并停止该序列。
+
+`-except`选项可以专门跳过命名的后处理器。`-only`选项将忽略后处理器。
+
+```json
+[
+  {
+    // can be skipped when running `packer build -except vbox`
+    "name": "vbox",
+    "type": "vagrant",
+    "only": ["virtualbox-iso"]
+  },
+  {
+    "type": "compress" // will only be executed when vbox is
+  }
+],
+[
+  "compress", // will run even if vbox is skipped, from the same start as vbox.
+  {
+    "type": "upload",
+    "endpoint": "http://example.com"
+  }
+  // this list of post processors will execute
+  // using build, not another post-processor.
+]
+```
+
+`only`或`except`中的值是构建名称，而不是生构建器类型。默认情况下，构建名称只是器构建器类型，但是，如果指定自定义名称参数，则应使用该名称作为值，而不是类型。
+
+## 模板供应商
 
