@@ -144,5 +144,15 @@ Packer中的每个build都有一个名称。默认情况下，名称只是所使
 - `build_name` - 正在运行的构建的名称。
 - `build_type` - 当前使用的构建器的类型。
 - `clean_resource_name` - 名称只能包含某些字符且具有最大长度，这取决于平台。`clean_resource_name`会将大写字母转换为小写字母，并将非法字符替换为`-`例如：`"mybuild-{{isotime | clean_resource_name}}"`将成为 `mybuild-2017-10-18t02-06-30z`。
-- `env`
+- `env` - 返回环境变量。
+- `build` - 此引擎将允许您访问提供链接信息和基本示例状态信息的特殊标量。
+-  `isotime` - UTC时间，可以将其格式化。
+-  `lower` - 小写字符串。
+-  `packer_version` - 返回Packer版本。
+-  `pwd` - 执行Packer时的工作目录。
+-  `replace` - （old, new string, n int, s）Replice返回字符串s的副本，其中旧的前n个非重叠实例都被new替换。
+-  `replace_all` - (old, new string, s)  RepliceAll返回字符串s的副本，其中旧的所有非重叠实例都被new替换。
+-  `split` - 使用分隔符分隔分割输入字符并返回请求的子字符串。
+-  `template_dir` - 构建模板的目录。
+-  
 
