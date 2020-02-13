@@ -636,3 +636,41 @@ packer build -var-file=variables.json template.json
 packer build -var-file variables.json template.json
 ```
 
+`-var-file`可以多次指定该参数，并且将读取并应用多个文件中的变量。稍后文件中读取的变量将覆盖之前设置的变量。
+
+`-var`和`-var-file`参数组合在一起也可以满足您的期望。
+
+```bash
+packer build \
+    -var 'aws_access_key=bar' \
+    -var-file=variables.json \
+    -var 'aws_secret_key=baz' \
+    template.json
+```
+
+结果为以下变量：
+
+| Variable       | Value |
+| :------------- | :---- |
+| aws_access_key | foo   |
+| aws_secret_key | baz   |
+
+### 敏感变量
+
+如果使用明爱设置敏感变量，则可能不希望将该变量打印到Packer日志中。可以通过将敏感变量添加到Packer模板中的`senstive-variables`列表中，确保不会将敏感变量打印到日志中：
+
+```json
+{
+  "variables": {
+    "my_secret": "{{env `MY_SECRET`}}",
+    "not_a_secret": "plaintext",
+    "foo": "bar"
+  },
+
+  "sensitive-variables": ["my_secret", "foo"],
+  ...
+}
+```
+
+上面的代码片段的功能与未设置敏感变量的功能完全相同，除了Packer UI 和日志将用`<sensitive>`替换所有`bar`实例以及`my_secret`的值。这是您可以确信不会偶然将明文打印到日志中。
+
