@@ -639,7 +639,74 @@ fmt.Println(nan == nan, nan < nan, nan > nan)
 
 ## 字符串
 
+### 字符
 
+Golang中没有专门的字符类型，如果要存储单个字符（字母），一般使用`byte`来存储，且使用单引号包裹。
+
+```go
+var c1 byte = 'a'
+var c2 byte = '0'
+fmt.Println("c1=", c1)					//输出 97   
+fmt.Println("c2=", c2)					//输出48
+fmt.Printf("c1=%c,c2=%c\n", c1, c2)	    //输出原值 a 0
+
+//var c3 byte = '北'
+//fmt.Printf("c3=%c", c3)					// 溢出错误:overflows byte
+```
+
+> - 字符类型可以用`%d`打印为整型
+> - 如果我们保存的字符在ASCII表，比如[0-1, a-z,A-Z..]直接可以保存到`byte`
+> - 如果我们保存的字符对应值大于255，这是我们可以考虑使用`int`类型
+> - 如果我们需要按照字符的方式输出，这是我们需要格式化，`fmt.Printf("%c", c1)`
+> - 字符可以和整型进行运算
+
+### 字符串
+
+传统字符串是由字符组成的，而Go的字符串是由单个字节连接起来的，即Go字符串是遗传固定长度的字符连接起来的字符序列。
+
+字符串在Go语言中是基本类型，内容在初始化后不能改变。
+
+Go中的字符串都是采用UTF-8字符集编码，使用一对双引号或反引号定义。反引号可以额外解析换行，即其没有字符转义功能。
+
+```go
+var str1 string
+st1 = "Hello "
+str2 := " World!"
+
+fmt.Println(str1[0])		// 输出字符串第一个字符 72
+fmt.Println(len(str1))		// 输出长度 6
+fmt.Println(str1 + str2)	// 输出不带空格的
+
+// 字符串不可变，编译报错： connot assign to 因为 str1[0] = 'c'
+```
+
+由于Go中的字符串不可直接改变，可以使用下列两种方式进行修改：
+
+方式一：通过转换为字节数组`[]byte`类型，构造一个临时字符串
+
+```go
+str := "hello"
+
+strTemp := []byte(str)
+fmt.Println("strTemp=", strTemp)	// [104 101 108 108 111]
+
+strTemp[0] = 'c'
+strResult := string(strTemp)
+fmt.Println("strResult=", strResult)	// strResult= cello
+```
+
+方式二： 使用切片
+
+```go
+str := "hello"	
+str = "c" + str[1:]	// 1: 表示从第1位开始到最后
+```
+
+Go和Java等语言一样，字符串默认不可变，这样保证了县城安全，大家使用的都是只读对象，无需加锁，且能很方便的共享内存，不必使用写时复制。
+
+### 字符串常用操作
+
+#### len()函数
 
 
 
