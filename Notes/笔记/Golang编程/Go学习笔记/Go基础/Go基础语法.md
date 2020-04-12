@@ -702,11 +702,63 @@ str := "hello"
 str = "c" + str[1:]	// 1: 表示从第1位开始到最后
 ```
 
-Go和Java等语言一样，字符串默认不可变，这样保证了县城安全，大家使用的都是只读对象，无需加锁，且能很方便的共享内存，不必使用写时复制。
+Go和Java等语言一样，字符串默认不可变，这样保证了线程安全，大家使用的都是只读对象，无需加锁，且能很方便的共享内存，不必使用写时复制。
 
 ### 字符串常用操作
 
-#### len()函数
+#### len()函数与字符串遍历
+
+`len()`函数是go语言的内建函数，可以用来获取字符串、切片、通道等长度。
+
+```go
+package main
+
+import (
+	"fmt"
+    "unicode/utf8"
+)
+
+func main() {
+    
+    str1 := "Hello World!"
+    str2 := "你好，"
+    
+    fmt.Println(len(str1))	// 11
+    fmt.Println(len(str2))  // 9
+    fmt.Println(utf8.RuneCountInString(str2))  // 3
+}
+```
+
+第一个函数输出11很容易理解，第二个函数却输入了9，这是因为Go的字符串都是以UTF-8格式保存，每个中文占据3个字节。Go中计算UTF-8字符串格式的长度应该使用`utf9.RuneCountInString`。
+
+字符串遍历方式一：使用字节数组，注意每个中文在UTF-8中占据3个字节。
+
+```go
+str := "hello"
+for i := 0; i<len(str); i++ {
+    fmt.Println(i, str[i])
+}
+```
+
+字符串遍历方式二：range关键字只是第一种方式的简写。
+
+```go
+str := "hello"
+for i, ch := range str {
+    fmt.Println(i, ch)
+}
+```
+
+> 由于上述`len()`函数本身原因，Unicode字符遍历需要使用range。
+
+#### string()函数类型转换
+
+go的内建函数`string()`可以将其他类型转变为字符串类型：
+
+```go
+num := 12
+fmt.Printf("%T \n", string(num))
+```
 
 
 
