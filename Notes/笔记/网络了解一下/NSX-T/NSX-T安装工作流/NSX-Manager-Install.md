@@ -36,8 +36,3 @@ NSX Manager提供了系统视图并且是NSX-T Data Center的管理组件。
 
 
 
-## 安装NSX Edge
-
-NSX Edge 为 NSX-T Data Center 部署外部的网络 NSX Edge提供路由服务和连接。如果要使用NAT、VPN等有状态服务部署Tier-0路由或Tier-1路由器，则需要部署NSX Edge。
-
-> 每个NSX Edge节点只能具有一个Tier-0路由器。不过，可以在一个NSX Edge节点上托管多个Tier-1逻辑路由器。可以在同一集群中组合使用大小不同的NSX Edge 虚拟机，但不建议。
