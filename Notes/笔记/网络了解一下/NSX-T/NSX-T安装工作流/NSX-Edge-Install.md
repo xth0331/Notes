@@ -17,7 +17,7 @@ NSX Edge 为 NSX-T Data Center 部署外部的网络 NSX Edge提供路由服务�
 - 如果`audit`用户的密码不符合复杂性要求，则会禁用该用户账户。要启用，请通过SSH或控制台以`admin`用户身份登录到NSX Edge，然后通过`set user audit`命令设置`audit`的密码。
 - 如果`root`用户密码不符合复杂性要求，必须通过SSH或控制台以`root`身份登录（密码`vmware`)，将提示修改密码。
 
-==只有设置足够复杂的密码后，设备的核心服务才会启动==
+==只有设置足够复杂的密码后，设备的核心服务才会启动。==
 
 从OVA文件布署NSX Edge后，无法通过关闭虚拟机电源，然后从vCenter Server中修改OVA设置来更改虚拟机IP。
 
