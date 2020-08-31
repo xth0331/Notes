@@ -13,7 +13,7 @@ NSX Manager提供了系统视图并且是NSX-T Data Center的管理组件。
 - vCenter Server 可以使用DRS功能在主机和集群之间重新平衡NSX Manager。
 - vCenter Server 可以使用反关联性功能在主机和集群之间管理NSX Manager。
 
-==NSX Manager 导入过程略。==
+==NSX Manager 导入过程略==
 
 
 
